@@ -94,17 +94,10 @@ button, select { font: inherit; color: inherit; }
 .source { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
 .btn { border: 1px solid var(--line); background: var(--panel); border-radius: 5px; padding: 7px 12px; cursor: pointer; font-weight: 500; }
 .btn:hover { border-color: var(--ink3); }
-label.btn { display: inline-block; }
-.vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--panel); }
-.btn.primary:hover { filter: brightness(1.08); }
 .source label { display: flex; align-items: center; gap: 6px; color: var(--ink2); font-size: 13px; }
 .source select { border: 1px solid var(--line); background: var(--panel); border-radius: 5px; padding: 6px 8px; }
 .status { color: var(--ink2); font-size: 13px; min-width: 0; flex: 1 1 220px; }
 .status .bad { color: var(--down); }
-.hint { color: var(--ink3); font-size: 12.5px; max-width: 75ch; }
-.banner { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn); border-radius: 5px; padding: 8px 12px; font-weight: 500; }
-body.dragging .wrap { outline: 2px dashed var(--accent); outline-offset: 6px; border-radius: 6px; }
 
 /* instrument cards */
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 14px; }
@@ -123,7 +116,11 @@ body.dragging .wrap { outline: 2px dashed var(--accent); outline-offset: 6px; bo
 .fresh { font-size: 12.5px; color: var(--ink3); }
 .fresh.stale { color: var(--warn); font-weight: 600; }
 
+.ranges { display: flex; flex-direction: column; gap: 12px; }
 .pdr { display: flex; flex-direction: column; gap: 6px; }
+.pdr-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 12.5px; color: var(--ink2); }
+.pdr-head .lbl { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink3); white-space: nowrap; }
+.pdr-head .num { color: var(--ink); }
 .pdr-track { position: relative; height: 18px; }
 .pdr-track::before { content: ""; position: absolute; left: 0; right: 0; top: 8px; height: 2px; background: var(--sunk); }
 .pdr-band { position: absolute; top: 5px; height: 8px; background: var(--accent-soft); border-left: 2px solid var(--ink3); border-right: 2px solid var(--ink3); }
@@ -131,7 +128,6 @@ body.dragging .wrap { outline: 2px dashed var(--accent); outline-offset: 6px; bo
 .pdr-now { position: absolute; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 2px solid var(--panel); transform: translateX(-7px); }
 .pdr-legend { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--ink3); }
 .pdr-legend b { font: 500 12.5px var(--f-data); color: var(--ink2); font-variant-numeric: tabular-nums; }
-.pdr-note { font-size: 12.5px; color: var(--ink2); }
 
 .tfm-wrap { overflow-x: auto; }
 .tfm { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -231,26 +227,14 @@ body.dragging .wrap { outline: 2px dashed var(--accent); outline-offset: 6px; bo
   <ul class="sessions" id="sessions" aria-label="Session anchors today, Rome time"></ul>
 
   <section class="source" aria-label="Data source">
-    <button class="btn primary" id="btnFolder" hidden>Link MT5 folder</button>
-    <button class="btn" id="btnReconnect" hidden>Reconnect folder</button>
-    <label class="btn" id="btnFiles" for="fileInput" tabindex="0" role="button">Add CSV files</label>
-    <input type="file" id="fileInput" class="vh" multiple accept=".csv,text/csv,text/comma-separated-values" tabindex="-1">
-    <button class="btn" id="btnClear" hidden>Clear</button>
-    <label for="offsetSel">CSV time to Rome
+    <label for="offsetSel" id="offsetLbl" hidden>Broker time to Rome
       <select id="offsetSel">
         <option value="-2">−2 h</option><option value="-1">−1 h</option><option value="0">same</option>
         <option value="1">+1 h</option><option value="2">+2 h</option>
       </select>
     </label>
-    <label for="refreshSel" id="refreshLbl" hidden>Re-read every
-      <select id="refreshSel">
-        <option value="15">15 s</option><option value="30">30 s</option><option value="60">60 s</option><option value="0">off</option>
-      </select>
-    </label>
-    <div class="status" id="status" role="status"></div>
+    <div class="status" id="status" role="status">Loading live data from Supabase…</div>
   </section>
-  <p class="hint" id="hint"></p>
-  <div class="banner" id="sampleBanner" hidden>Sample data. These prices are generated, not the market. Add your MT5 CSV exports to replace them.</div>
 
   <section class="cards" id="cards" aria-label="Instruments"></section>
 
@@ -273,6 +257,7 @@ body.dragging .wrap { outline: 2px dashed var(--accent); outline-offset: 6px; bo
 
   <footer class="foot">
     <p><b>How the lean is scored.</b> Each timeframe votes on three things: price above or below its moving average, RSI above 55 or below 45, and the direction of the RSI slope (half weight). D1 counts 3×, H4 2×, H1 1.5×, M15 1×. A score of +30 or more reads as leaning up, −30 or less as leaning down, anything between as mixed.</p>
+    <p><b>Previous day and week bars.</b> The band runs from that period’s low to its high, the tick marks its close and the dot is the current price. The week comes from the W1 bar, or from D1 bars when W1 is not in the bundle.</p>
     <p><b>Levels &amp; room.</b> Range used is today’s high-to-low against the daily ATR of the last completed day. Typical-day reach projects one ATR from today’s low (up) and from today’s high (down). The Asian range runs from 00:00 Rome to the London open. The ladder lists the nearest levels above and below price; rows within 0.15 ATR are highlighted. Round numbers are spaced at roughly half an ATR. Latest shift is the most recent H1-or-higher bar where RSI crossed 50 or price crossed its moving average.</p>
     <p>The lean is chart structure only. The news panel lists scheduled releases from MT5’s economic calendar; it does not read headlines or judge what the market expects, so run your pre-session check before acting.</p>
   </footer>
@@ -290,17 +275,15 @@ const MA_RE = /^(sma|ema|smma|lwma|wma)_?\d+$/;
 const ROME = 'Europe/Rome';
 const $ = id => document.getElementById(id);
 
-const store = { summary: new Map(), series: new Map(), files: new Set(), sample: false, lastRead: null, skipped: [], news: [], hasNews: false };
+const store = { summary: new Map(), series: new Map(), lastRead: null, news: [], hasNews: false, serverOffMin: NaN };
 const CLOUD_URL = 'https://rzxlwvuvakndsjbgveup.supabase.co/storage/v1/object/public/session-desk/session_desk_bundle.csv';
-const cfg = { offsetH: 1, refreshS: 30, newsWeek: false };
+const CLOUD_EVERY_S = 60;
+const cfg = { offsetH: 1, newsWeek: false };
 try { Object.assign(cfg, JSON.parse(localStorage.getItem('mt5desk.cfg') || '{}')); } catch (e) {}
-delete cfg.cloud; delete cfg.sym; delete cfg.tf;
+delete cfg.cloud; delete cfg.sym; delete cfg.tf; delete cfg.refreshS;
 const saveCfg = () => { try { localStorage.setItem('mt5desk.cfg', JSON.stringify(cfg)); } catch (e) {} };
 
 let model = [];          // built instrument views
-let dirHandle = null;    // linked folder
-let dirSeen = new Map(); // file name -> lastModified
-let timer = null;
 
 /* ---------- small helpers ---------- */
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -343,7 +326,7 @@ function until(ms) {
   return m < 60 ? 'in ' + m + ' min' : 'in ' + Math.floor(m / 60) + ' h ' + pad2(m % 60) + ' min';
 }
 
-/* ---------- indicators (used when a column is missing, and for sample data) ---------- */
+/* ---------- indicators (used when a column is missing) ---------- */
 function rsiCalc(c, n = 14) {
   const out = new Array(c.length).fill(NaN); let g = 0, l = 0;
   for (let i = 1; i < c.length; i++) {
@@ -358,19 +341,6 @@ function atrCalc(b, n = 14) {
   for (let i = 1; i < b.length; i++) {
     const tr = Math.max(b[i].h - b[i].l, Math.abs(b[i].h - b[i - 1].c), Math.abs(b[i].l - b[i - 1].c));
     if (i <= n) { a += tr; if (i === n) { a /= n; out[i] = a; } } else { a = (a * (n - 1) + tr) / n; out[i] = a; }
-  }
-  return out;
-}
-function smaCalc(c, n) {
-  const out = new Array(c.length).fill(NaN); let s = 0;
-  for (let i = 0; i < c.length; i++) { s += c[i]; if (i >= n) s -= c[i - n]; if (i >= n - 1) out[i] = s / n; }
-  return out;
-}
-function emaCalc(c, n) {
-  const out = new Array(c.length).fill(NaN), k = 2 / (n + 1); let s = 0, e = NaN;
-  for (let i = 0; i < c.length; i++) {
-    if (i < n) { s += c[i]; if (i === n - 1) { e = s / n; out[i] = e; } }
-    else { e = c[i] * k + e * (1 - k); out[i] = e; }
   }
   return out;
 }
@@ -484,59 +454,6 @@ function ingestOne(name, text) {
   return null;
 }
 
-/* ---------- sample data (clearly marked on screen) ---------- */
-function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-function loadSample() {
-  store.summary.clear(); store.series.clear(); store.files.clear(); store.skipped = []; store.serverOffMin = NaN;
-  const nowBroker = wallOf(new Date(), ROME) - cfg.offsetH * 3600e3;
-  const end = Math.floor(nowBroker / 9e5) * 9e5;
-  const times = [];
-  for (let t = end; times.length < 96 * 130; t -= 9e5) { const d = new Date(t).getUTCDay(); if (d !== 0 && d !== 6) times.push(t); }
-  times.reverse();
-  const specs = [
-    { label: 'EURUSD.i', p: 1.0850, s: 0.00030, dec: 5, drift: -0.0000012, seed: 11 },
-    { label: 'NDX100', p: 21400, s: 11, dec: 1, drift: 0.22, seed: 23 },
-    { label: 'XAUUSD', p: 2680, s: 1.3, dec: 2, drift: 0.012, seed: 37 }
-  ];
-  for (const sp of specs) {
-    const rnd = mulberry(sp.seed);
-    const g = () => { let u = 0; for (let i = 0; i < 6; i++) u += rnd(); return (u - 3) / 0.7071; };
-    let c = sp.p; const m15 = [];
-    for (const t of times) {
-      const o = c; c = o + sp.drift + sp.s * g();
-      m15.push({ t, o, h: Math.max(o, c) + Math.abs(g()) * sp.s * 0.45, l: Math.min(o, c) - Math.abs(g()) * sp.s * 0.45, c, v: Math.round(400 + rnd() * 900) });
-    }
-    const agg = min => {
-      const out = []; let cur = null, curK = null;
-      for (const b of m15) {
-        const k = Math.floor(b.t / (min * 6e4));
-        if (k !== curK) { cur = { t: k * min * 6e4, o: b.o, h: b.h, l: b.l, c: b.c, v: b.v }; out.push(cur); curK = k; }
-        else { cur.h = Math.max(cur.h, b.h); cur.l = Math.min(cur.l, b.l); cur.c = b.c; cur.v += b.v; }
-      }
-      return out;
-    };
-    const sets = { D1: [agg(1440), ['sma_50', 'sma_89']], H4: [agg(240), ['sma_89']], H1: [agg(60), ['sma_89']], M15: [m15, ['ema_89']] };
-    for (const tf in sets) {
-      const [bars, maNames] = sets[tf];
-      const cl = bars.map(b => b.c), r = rsiCalc(cl), a = atrCalc(bars);
-      const mas = {}; for (const m of maNames) mas[m] = (m.startsWith('ema') ? emaCalc : smaCalc)(cl, +m.split('_')[1]);
-      bars.forEach((b, i) => { b.rsi = r[i]; b.atr = a[i]; b.slope = i ? r[i] - r[i - 1] : NaN; b.zone = ''; b.ma = {}; for (const m of maNames) b.ma[m] = mas[m][i]; });
-      const key = normKey(sp.label);
-      store.series.set(key + '|' + tf, { key, tf, label: sp.label, bars: bars.slice(-400), maNames, dec: sp.dec });
-    }
-  }
-  const romeDay = Math.floor(wallOf(new Date(), ROME) / 864e5) * 864e5, hr = 3600e3;
-  const all = specs.map(x => x.label);
-  const ev = (romeHour, cur, name, syms, actual, forecast, prev) => ({ t: romeDay + romeHour * hr - cfg.offsetH * hr, cur, imp: 'high', name, actual, forecast, prev, allDay: false, syms, keys: syms.map(normKey) });
-  store.news = [
-    ev(14.5, 'USD', 'Sample release A (not a real event)', all, '', '0.3%', '0.2%'),
-    ev(16, 'USD', 'Sample release B (not a real event)', all, '', '52.1', '51.8'),
-    ev(34, 'EUR', 'Sample release C (not a real event)', ['EURUSD.i'], '', '2.1%', '2.2%')
-  ];
-  store.hasNews = true;
-  store.sample = true; store.lastRead = null;
-}
-
 /* ---------- model ---------- */
 function chooseMA(tf, e, sum) {
   if (e.ser) {
@@ -549,8 +466,17 @@ function chooseMA(tf, e, sum) {
   if (sum && Number.isFinite(sum.sma20)) return { name: 'sma_20', value: sum.sma20 };
   return null;
 }
+/* previous completed week: the second-to-last W1 bar, or else the D1 bars of the week (Sunday start, as MT5) before the latest one */
+function prevWeekOf(key) {
+  const w1 = store.series.get(key + '|W1'), d1 = store.series.get(key + '|D1');
+  if (w1 && w1.bars.length > 1) { const b = w1.bars[w1.bars.length - 2]; return { h: b.h, l: b.l, c: b.c }; }
+  if (!d1 || !d1.bars.length) return null;
+  const bday = Math.floor(d1.bars[d1.bars.length - 1].t / DAY) * DAY, sun = bday - new Date(bday).getUTCDay() * DAY;
+  const wk = d1.bars.filter(b => b.t >= sun - 7 * DAY && b.t < sun);
+  return wk.length ? { h: Math.max(...wk.map(b => b.h)), l: Math.min(...wk.map(b => b.l)), c: wk[wk.length - 1].c } : null;
+}
 function buildModel() {
-  if (!store.sample && Number.isFinite(store.serverOffMin)) {   // exporter told us the broker clock: no manual offset needed
+  if (Number.isFinite(store.serverOffMin)) {   // exporter told us the broker clock: no manual offset needed
     const romeOff = Math.round((wallOf(new Date(), ROME) - Date.now()) / 60000);
     cfg.offsetH = Math.max(-2, Math.min(2, Math.round((romeOff - store.serverOffMin) / 60)));
   }
@@ -582,6 +508,7 @@ function buildModel() {
     let pd = anySum && Number.isFinite(anySum.pdh) ? { h: anySum.pdh, l: anySum.pdl, c: anySum.pdc, date: anySum.pdDate } : null;
     const d1 = s.raw.get('D1');
     if (!pd && d1 && d1.ser && d1.ser.bars.length > 1) { const p = d1.ser.bars[d1.ser.bars.length - 2]; pd = { h: p.h, l: p.l, c: p.c, date: '' }; }
+    const pw = prevWeekOf(s.key);
 
     let score = 0, max = 0;
     for (const v of views) {
@@ -595,7 +522,7 @@ function buildModel() {
     const newest = Math.max(...views.map(v => Number.isFinite(v.lastTime) ? v.lastTime : -Infinity));
     const minTf = Math.min(...tfs.map(tf => TF_MIN[tf] || 60));
     const age = Number.isFinite(newest) ? nowRome - (newest + off) : NaN;
-    return { key: s.key, label: s.label, dec, views, price, pd, lean, newest, age, stale: age > Math.max(45, minTf * 3) * 60000 };
+    return { key: s.key, label: s.label, dec, views, price, pd, pw, lean, newest, age, stale: age > Math.max(45, minTf * 3) * 60000 };
   });
 }
 
@@ -634,7 +561,9 @@ function renderNews() {
   const body = $('newsBody'), sub = $('newsSub'), btn = $('btnNewsSpan');
   if (!store.hasNews) {
     sub.textContent = ''; btn.hidden = true;
-    body.innerHTML = '<p class="news-empty">No news file loaded yet. SessionDeskService 1.20 or later writes news_calendar.csv from MT5\u2019s economic calendar into the same folder.</p>';
+    body.innerHTML = cloudOn
+      ? '<p class="news-empty">The bundle has no news calendar. SessionDeskService 1.20 or later adds it from MT5\u2019s economic calendar.</p>'
+      : '<p class="news-empty">Waiting for data.</p>';
     return;
   }
   const all = newsView(), day0 = Math.floor(wallOf(new Date(), ROME) / DAY) * DAY;
@@ -675,25 +604,29 @@ function leanChip(lean) {
   if (lean <= -30) return '<span class="chip down">▼ Leans down</span>';
   return '<span class="chip mixed">◆ Mixed</span>';
 }
-function pdrHTML(m) {
-  const { pd, price, dec } = m;
-  if (!pd || !Number.isFinite(pd.h) || !Number.isFinite(pd.l) || !Number.isFinite(price)) return '';
-  const lo = Math.min(pd.l, price), hi = Math.max(pd.h, price), span = (hi - lo) || 1, padv = span * 0.06;
+/* price against a previous period's range (r = { h, l, c }) */
+function rangeBarHTML(title, r, price, dec) {
+  if (!r || !Number.isFinite(r.h) || !Number.isFinite(r.l) || !Number.isFinite(price)) return '';
+  const lo = Math.min(r.l, price), hi = Math.max(r.h, price), span = (hi - lo) || 1, padv = span * 0.06;
   const x = v => (100 * (v - (lo - padv)) / (span + 2 * padv)).toFixed(2);
-  const range = pd.h - pd.l;
+  const range = r.h - r.l;
   let note;
-  if (price > pd.h) note = `Above the previous day's high by ${fmt(price - pd.h, dec)}.`;
-  else if (price < pd.l) note = `Below the previous day's low by ${fmt(pd.l - price, dec)}.`;
-  else note = `Inside the previous day's range, ${range > 0 ? Math.round(100 * (price - pd.l) / range) : 50}% of the way up from the low.`;
+  if (price > r.h) note = `<span class="c-up">▲ Above high by <span class="num">${fmt(price - r.h, dec)}</span></span>`;
+  else if (price < r.l) note = `<span class="c-down">▼ Below low by <span class="num">${fmt(r.l - price, dec)}</span></span>`;
+  else note = `Inside, <span class="num">${range > 0 ? Math.round(100 * (price - r.l) / range) : 50}%</span> up from the low`;
   return `<div class="pdr">
-    <div class="pdr-track" role="img" aria-label="Price position against the previous day's range">
-      <div class="pdr-band" style="left:${x(pd.l)}%;width:${(x(pd.h) - x(pd.l)).toFixed(2)}%"></div>
-      ${Number.isFinite(pd.c) ? `<div class="pdr-close" style="left:${x(pd.c)}%"></div>` : ''}
+    <div class="pdr-head"><span class="lbl">${title}</span><span>${note}</span></div>
+    <div class="pdr-track" role="img" aria-label="Price position against the ${title.toLowerCase()} range">
+      <div class="pdr-band" style="left:${x(r.l)}%;width:${(x(r.h) - x(r.l)).toFixed(2)}%"></div>
+      ${Number.isFinite(r.c) ? `<div class="pdr-close" style="left:${x(r.c)}%"></div>` : ''}
       <div class="pdr-now" style="left:${x(price)}%"></div>
     </div>
-    <div class="pdr-legend"><span>Prev low <b>${fmt(pd.l, dec)}</b></span><span>Prev close <b>${fmt(pd.c, dec)}</b></span><span>Prev high <b>${fmt(pd.h, dec)}</b></span></div>
-    <div class="pdr-note">${note}</div>
+    <div class="pdr-legend"><span>Low <b>${fmt(r.l, dec)}</b></span><span>Close <b>${fmt(r.c, dec)}</b></span><span>High <b>${fmt(r.h, dec)}</b></span></div>
   </div>`;
+}
+function rangesHTML(m) {
+  const html = rangeBarHTML('Previous day', m.pd, m.price, m.dec) + rangeBarHTML('Previous week', m.pw, m.price, m.dec);
+  return html ? `<div class="ranges">${html}</div>` : '';
 }
 function rowHTML(m, v) {
   const rsiTag = v.rsi >= 70 ? '<span class="tag ob">OB</span>' : v.rsi <= 30 ? '<span class="tag os">OS</span>' : '';
@@ -711,7 +644,7 @@ function rowHTML(m, v) {
 function renderCards() {
   const el = $('cards');
   if (!model.length) {
-    el.innerHTML = `<div class="empty">No instruments loaded. Add <b>latest_rsi_summary.csv</b> and the per-timeframe files (for example <b>EURUSD_i_H1_RSI.csv</b>).</div>`;
+    el.innerHTML = `<div class="empty">${cloudOn ? 'The Supabase bundle has no instruments in it.' : esc(cloudErr || 'Loading live data from Supabase…')}</div>`;
     return;
   }
   const off = cfg.offsetH * 3600e3, nlist = newsView(), nday0 = Math.floor(wallOf(new Date(), ROME) / DAY) * DAY;
@@ -726,7 +659,7 @@ function renderCards() {
       ${fresh}
       ${newsLine(m, nlist, nday0)}
       ${shiftLine(m)}
-      ${pdrHTML(m)}
+      ${rangesHTML(m)}
       <div class="tfm-wrap"><table class="tfm">
         <thead><tr><th scope="col">TF</th><th scope="col">RSI 14</th><th scope="col">Slope</th><th scope="col">ATR 14</th><th scope="col">vs MA</th></tr></thead>
         <tbody>${m.views.map(v => rowHTML(m, v)).join('')}</tbody>
@@ -781,16 +714,7 @@ function roomOf(m) {
     }
   }
 
-  // previous week from W1 or D1 bars
-  let pw = null;
-  const w1 = seriesOf(m, 'W1');
-  if (w1 && w1.bars.length > 1) { const b = w1.bars[w1.bars.length - 2]; pw = { h: b.h, l: b.l }; }
-  else if (d1) {
-    const dow = new Date(bday).getUTCDay(), mon = bday - ((dow + 6) % 7) * DAY;
-    const wk = d1.bars.filter(b => b.t >= mon - 7 * DAY && b.t < mon);
-    if (wk.length) pw = { h: Math.max(...wk.map(b => b.h)), l: Math.min(...wk.map(b => b.l)) };
-  }
-  return { atr, day, asia, pw, price };
+  return { atr, day, asia, pw: m.pw, price };
 }
 
 function ladderOf(m, r) {
@@ -867,7 +791,7 @@ function levelsHTML(m) {
 }
 function renderLevels() {
   const el = $('levels');
-  el.innerHTML = model.length ? model.map(levelsHTML).join('') : '<p class="lv-empty">Load data to see levels.</p>';
+  el.innerHTML = model.length ? model.map(levelsHTML).join('') : '<p class="lv-empty">Waiting for data.</p>';
 }
 
 /* latest RSI-50 or moving-average cross on H1 and higher */
@@ -901,160 +825,57 @@ function shiftLine(m) {
 }
 
 /* ---------- status & refresh ---------- */
-function renderStatus(extra) {
-  const bits = [];
-  if (store.sample) bits.push('Showing sample data');
-  else {
-    bits.push(`${store.files.size} file${store.files.size === 1 ? '' : 's'} loaded`);
-    if (dirHandle) bits.push(`folder “${esc(dirHandle.name)}”`);
-    if (cloudOn) bits.push('live from Supabase');
-    if (store.lastRead) bits.push('read ' + fmtWall(wallOf(store.lastRead, ROME)) + ':' + pad2(new Date(wallOf(store.lastRead, ROME)).getUTCSeconds()));
+function renderStatus() {
+  let html = cloudErr ? '' : 'Loading live data from Supabase…';
+  if (store.lastRead) {
+    const t = new Date(wallOf(store.lastRead, ROME));
+    html = `Live from Supabase · read ${pad2(t.getUTCHours())}:${pad2(t.getUTCMinutes())}:${pad2(t.getUTCSeconds())}, every ${CLOUD_EVERY_S} s`;
   }
-  let html = bits.join(' · ');
-  if (store.skipped.length) html += ` <span class="bad">· Skipped: ${store.skipped.map(s => esc(s)).join('; ')}</span>`;
-  if (extra) html += ` <span class="bad">· ${esc(extra)}</span>`;
+  if (cloudErr) html += `<span class="bad">${html ? ' · ' : ''}${esc(cloudErr)}</span>`;
   $('status').innerHTML = html;
-  const autoOff = !store.sample && Number.isFinite(store.serverOffMin);
-  $('offsetSel').value = String(cfg.offsetH); $('offsetSel').disabled = autoOff;
-  $('offsetSel').title = autoOff ? 'Set automatically from the broker clock in the export' : '';
-  $('sampleBanner').hidden = !store.sample;
-  $('btnClear').hidden = store.sample || cloudOn;
-  $('refreshLbl').hidden = !dirHandle;
+  $('offsetSel').value = String(cfg.offsetH);
+  $('offsetLbl').hidden = !cloudOn || Number.isFinite(store.serverOffMin);   // only needed when the export lacks the broker clock
 }
 function refreshAll() { buildModel(); renderNews(); renderCards(); renderLevels(); renderStatus(); saveCfg(); }
 
-function beginReal() { if (store.sample) { store.summary.clear(); store.series.clear(); store.files.clear(); store.news = []; store.hasNews = false; store.sample = false; } }
-async function addFiles(fileList) {
-  const files = [...fileList].filter(f => /\.csv$/i.test(f.name));
-  if (!files.length) return renderStatus('Those were not CSV files.');
-  store.skipped = [];
-  let took = 0;
-  for (const f of files) {
-    try {
-      const text = decode(await f.arrayBuffer());
-      const wasSample = store.sample; if (wasSample) beginReal();
-      const why = ingest(f.name, text);
-      if (why) store.skipped.push(`${f.name} (${why})`); else { store.files.add(f.name); took++; }
-    } catch (e) { store.skipped.push(`${f.name} (could not be read)`); }
-  }
-  if (!store.files.size) { loadSample(); const sk = store.skipped; refreshAll(); store.skipped = sk; return renderStatus(); }
-  if (took) store.lastRead = new Date();
-  refreshAll();
-}
-
-/* linked folder (desktop copy in Chrome / Edge) */
-const topLevel = (() => { try { return window.self === window.top; } catch (e) { return false; } })();
-const canLink = topLevel && 'showDirectoryPicker' in window;
-
-/* live data: the MT5 service uploads the bundle to Supabase Storage, this page reads it every minute */
-let cloudTimer = null, cloudLast = '', cloudOn = false;
+/* ---------- live data: the MT5 service uploads the bundle to Supabase Storage, this page reads it every minute ---------- */
+let cloudLast = '', cloudOn = false, cloudErr = '';
+function cloudFail(msg) { cloudErr = msg; renderStatus(); if (!cloudOn) renderCards(); }
 async function readCloud() {
+  let text;
   try {
     const res = await fetch(CLOUD_URL + '?t=' + Date.now(), { cache: 'no-store' });
-    if (!res.ok) return renderStatus(res.status === 400 || res.status === 404
+    if (!res.ok) return cloudFail(res.status === 400 || res.status === 404
       ? 'No bundle on Supabase yet. Check that the MT5 service is uploading.'
       : 'Supabase answered with error ' + res.status + '.');
-    const text = decode(await res.arrayBuffer());
-    if (!/^﻿?#FILE /.test(text)) return renderStatus('Supabase did not return a Session Desk bundle.');
-    if (text === cloudLast && cloudOn) { store.lastRead = new Date(); return renderStatus(); }
-    beginReal(); store.skipped = [];
-    const why = ingest('session_desk_bundle.csv', text);
-    if (why) { if (!store.files.size) { loadSample(); refreshAll(); } return renderStatus('The bundle could not be read (' + why + ').'); }
-    cloudLast = text; cloudOn = true; store.files.add('session_desk_bundle.csv'); store.lastRead = new Date();
-    refreshAll();
-  } catch (e) { if (topLevel || cloudOn) renderStatus('Could not reach Supabase. Check your connection.'); }
-}
-function startCloud() {
-  clearInterval(cloudTimer);
-  readCloud();
-  cloudTimer = setInterval(readCloud, 60000);
-}
-function stopCloud() { clearInterval(cloudTimer); cloudTimer = null; cloudLast = ''; cloudOn = false; }
-function idb(mode, fn) {
-  return new Promise((res, rej) => {
-    const rq = indexedDB.open('mt5desk', 1);
-    rq.onupgradeneeded = () => rq.result.createObjectStore('kv');
-    rq.onerror = () => rej(rq.error);
-    rq.onsuccess = () => { try { const tx = rq.result.transaction('kv', mode), r = fn(tx.objectStore('kv')); tx.oncomplete = () => res(r.result); tx.onerror = () => rej(tx.error); } catch (e) { rej(e); } };
-  });
-}
-async function readDir() {
-  if (!dirHandle) return;
-  let changed = false; const skipped = [];
-  try {
-    const walk = async (dir, depth, prefix) => {
-      for await (const [name, h] of dir.entries()) {
-        if (h.kind === 'directory') { if (depth < 2) await walk(h, depth + 1, prefix + name + '/'); continue; }
-        if (!/\.csv$/i.test(name) || !(FILE_RE.test(name) || /rsi_summary|news_calendar|session_desk_bundle/i.test(name))) continue;
-        const f = await h.getFile(), id = prefix + name;
-        if (dirSeen.get(id) === f.lastModified) continue;
-        dirSeen.set(id, f.lastModified);
-        beginReal();
-        const why = ingest(name, decode(await f.arrayBuffer()));
-        if (why) skipped.push(`${name} (${why})`); else { store.files.add(name); changed = true; }
-      }
-    };
-    await walk(dirHandle, 0, '');
-  } catch (e) { return renderStatus('Lost access to the folder. Link it again.'); }
-  store.skipped = skipped;
-  if (changed) { store.lastRead = new Date(); refreshAll(); }
-  else if (!store.files.size) {
-    if (!store.sample) { loadSample(); refreshAll(); }
-    renderStatus('No RSI export files in that folder or its subfolders yet. It needs latest_rsi_summary.csv and files like EURUSD_i_H1_RSI.csv.');
+    text = decode(await res.arrayBuffer());
+  } catch (e) { return cloudFail('Could not reach Supabase. Check your connection.'); }
+  if (!/^﻿?#FILE /.test(text)) return cloudFail('Supabase did not return a Session Desk bundle.');
+  if (text !== cloudLast) {
+    // the bundle is a full snapshot: parse it into a clean store, and keep the previous one if it can't be read
+    const prev = { summary: store.summary, series: store.series, news: store.news, hasNews: store.hasNews, serverOffMin: store.serverOffMin };
+    Object.assign(store, { summary: new Map(), series: new Map(), news: [], hasNews: false, serverOffMin: NaN });
+    let why;
+    try { why = ingest('session_desk_bundle.csv', text); } catch (e) { why = 'unexpected format'; }
+    if (why) { Object.assign(store, prev); return cloudFail('The bundle could not be read (' + why + ').'); }
+    cloudLast = text; cloudOn = true;
   }
-  else renderStatus();
-}
-function startTimer() { clearInterval(timer); timer = null; if (dirHandle && cfg.refreshS > 0) timer = setInterval(readDir, cfg.refreshS * 1000); }
-async function useDir(h) { dirHandle = h; dirSeen = new Map(); $('btnReconnect').hidden = true; await readDir(); startTimer(); }
-async function linkFolder() {
-  try {
-    const h = await window.showDirectoryPicker({ id: 'mt5files', mode: 'read' });
-    try { await idb('readwrite', s => s.put(h, 'dir')); } catch (e) {}
-    await useDir(h);
-  } catch (e) { if (e.name !== 'AbortError') renderStatus('That folder could not be opened. Link the MT5-Desk mirror folder instead.'); }
+  cloudErr = ''; store.lastRead = new Date();
+  refreshAll();
 }
 
 /* ---------- wiring ---------- */
 $('offsetSel').value = String(cfg.offsetH);
-$('refreshSel').value = String(cfg.refreshS);
-$('offsetSel').addEventListener('change', e => { cfg.offsetH = +e.target.value; if (store.sample) loadSample(); refreshAll(); });
-$('refreshSel').addEventListener('change', e => { cfg.refreshS = +e.target.value; saveCfg(); startTimer(); });
-$('btnFiles').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('fileInput').click(); } });
+$('offsetSel').addEventListener('change', e => { cfg.offsetH = +e.target.value; refreshAll(); });
 $('btnNewsSpan').addEventListener('click', () => { cfg.newsWeek = !cfg.newsWeek; saveCfg(); renderNews(); });
-$('fileInput').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
-$('btnClear').addEventListener('click', () => { clearInterval(timer); timer = null; dirHandle = null; dirSeen = new Map(); idb('readwrite', s => s.delete('dir')).catch(() => {}); loadSample(); refreshAll(); });
-let dragDepth = 0;
-window.addEventListener('dragenter', e => { e.preventDefault(); dragDepth++; document.body.classList.add('dragging'); });
-window.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dragging'); } });
-window.addEventListener('dragover', e => e.preventDefault());
-window.addEventListener('drop', e => { e.preventDefault(); dragDepth = 0; document.body.classList.remove('dragging'); if (e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
-
-$('hint').textContent = canLink
-  ? 'Start the SessionDeskService in MT5, then link the folder it writes to (by default Downloads\\SessionDesk): this page re-reads it on its own. You can also drop CSV files anywhere on the page.'
-  : topLevel
-  ? 'Live data loads from Supabase on its own and refreshes every minute. You can still tap Add CSV files and pick session_desk_bundle.csv from the SessionDesk folder in OneDrive.'
-  : 'Drop your MT5 CSV exports anywhere on this page, or use Add CSV files: latest_rsi_summary.csv plus the SYMBOL_TF_RSI.csv files that the SessionDeskService writes. On a phone, tap Add CSV files and pick session_desk_bundle.csv from the SessionDesk folder in OneDrive; pick it again whenever you want fresh numbers. For hands-free refresh from the MT5 folder, open the desktop copy of this page in Chrome or Edge.';
 document.addEventListener('visibilitychange', () => { if (!document.hidden) readCloud(); });
-if (canLink) {
-  $('btnFolder').hidden = false;
-  $('btnFolder').addEventListener('click', linkFolder);
-  idb('readonly', s => s.get('dir')).then(async h => {
-    if (!h) return;
-    if (await h.queryPermission({ mode: 'read' }) === 'granted') return useDir(h);
-    $('btnReconnect').hidden = false; $('btnReconnect').textContent = `Reconnect “${h.name}”`;
-    $('btnReconnect').addEventListener('click', async () => { if (await h.requestPermission({ mode: 'read' }) === 'granted') useDir(h); });
-  }).catch(() => {});
-}
 
-loadSample();
 refreshAll();
 renderClock(); renderSessions();
-startCloud();
+readCloud();
+setInterval(readCloud, CLOUD_EVERY_S * 1000);
 setInterval(renderClock, 1000);
 setInterval(() => { renderSessions(); buildModel(); renderNews(); renderCards(); renderLevels(); }, 30000);
-
-/* test hook for the parser (no UI depends on it) */
-window.__mt5desk = { addFiles, store, cfg };
 })();
 </script>
 
