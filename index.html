@@ -1,18 +1,10 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Session Desk">
-</head>
-<body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>MT5 Session Desk</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600&display=swap">
 <style>
 /* Layout: clock and session anchors on top, one card per instrument with a
-   timeframe matrix, then a candle + RSI panel for the selected timeframe. */
+   timeframe matrix, then news, then a levels & room panel per instrument. */
 :root {
   --bg: #edf0f4;
   --panel: #fbfcfd;
@@ -111,10 +103,6 @@ label.btn { display: inline-block; }
 .status { color: var(--ink2); font-size: 13px; min-width: 0; flex: 1 1 220px; }
 .status .bad { color: var(--down); }
 .hint { color: var(--ink3); font-size: 12.5px; max-width: 75ch; }
-.cloud { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 12px; }
-.cloud > label { font-size: 12px; letter-spacing: 0.04em; color: var(--ink2); font-weight: 500; }
-.cloud-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.cloud input { flex: 1 1 240px; min-width: 0; font: 14px var(--f-data); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 7px 10px; }
 .banner { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn); border-radius: 5px; padding: 8px 12px; font-weight: 500; }
 body.dragging .wrap { outline: 2px dashed var(--accent); outline-offset: 6px; border-radius: 6px; }
 
@@ -151,10 +139,7 @@ body.dragging .wrap { outline: 2px dashed var(--accent); outline-offset: 6px; bo
 .tfm th:first-child, .tfm td:first-child { text-align: left; padding-left: 0; }
 .tfm td { text-align: right; padding: 6px 5px; vertical-align: middle; border-top: 1px solid var(--line); white-space: nowrap; font-family: var(--f-data); font-variant-numeric: tabular-nums; }
 .tfm td:last-child, .tfm th:last-child { padding-right: 0; }
-.tfm tr.sel td { background: var(--accent-soft); }
-.tfm tr.sel td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
-.tfbtn { border: 1px solid var(--line); background: transparent; border-radius: 4px; padding: 2px 6px; margin-left: 5px; cursor: pointer; font: 600 12px var(--f-data); min-width: 42px; }
-.tfbtn:hover { border-color: var(--accent); color: var(--accent); }
+.tfl { font: 600 12px var(--f-data); color: var(--ink2); }
 .rsi-cell { display: inline-flex; align-items: center; gap: 7px; justify-content: flex-end; }
 .rsi-bar { position: relative; width: 38px; height: 8px; background: var(--sunk); border-radius: 2px; flex: none; }
 .rsi-bar::before { content: ""; position: absolute; left: 30%; width: 40%; top: 0; bottom: 0; background: var(--line); }
@@ -166,31 +151,40 @@ body.dragging .wrap { outline: 2px dashed var(--accent); outline-offset: 6px; bo
 .score { font-size: 12.5px; color: var(--ink3); }
 .empty { background: var(--panel); border: 1px dashed var(--line); border-radius: 6px; padding: 28px 18px; color: var(--ink2); }
 
-/* chart panel */
-.chartsec { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.chart-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
-.chart-head h2 { font: 600 17px/1.1 var(--f-head); letter-spacing: 0.02em; }
-.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
-.seg button { border: 0; background: transparent; padding: 6px 11px; cursor: pointer; font: 500 12.5px var(--f-data); border-right: 1px solid var(--line); }
-.seg button:last-child { border-right: 0; }
-.seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
-.segs { display: flex; flex-wrap: wrap; gap: 8px; }
-.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12.5px; color: var(--ink2); }
-.legend span { display: inline-flex; align-items: center; gap: 6px; }
-.sw { width: 14px; height: 0; border-top: 2px solid var(--ink3); display: inline-block; }
-.sw.s1 { border-color: var(--series-1); } .sw.s2 { border-color: var(--series-2); }
-.sw.dash { border-top-style: dashed; }
-.sw.cu { height: 10px; width: 6px; border: 0; background: var(--candle-up); border-radius: 1px; }
-.sw.cd { height: 10px; width: 6px; border: 0; background: var(--candle-down); border-radius: 1px; }
-.readout { display: flex; flex-wrap: wrap; gap: 2px 14px; font: 12.5px var(--f-data); font-variant-numeric: tabular-nums; color: var(--ink2); min-height: 19px; }
-.readout b { font-weight: 500; color: var(--ink); }
-.readout .k { color: var(--ink3); margin-right: 4px; }
-.pane { width: 100%; min-width: 0; }
-#paneP { height: 360px; }
-#paneR { height: 150px; }
-.pane-title { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink3); }
-.chart-msg { color: var(--ink2); padding: 18px 0; }
-
+/* levels & room */
+.levels { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.levels-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.levels-head h2 { font: 600 17px/1.1 var(--f-head); letter-spacing: 0.02em; }
+.levels-sub { color: var(--ink2); font-size: 13px; }
+.lv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 14px 22px; }
+.lv { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+@media (max-width: 760px) { .lv + .lv { border-top: 1px solid var(--line); padding-top: 14px; } }
+.lv h3 { font: 600 15px/1.1 var(--f-head); letter-spacing: 0.02em; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.lv h3 .px2 { font: 500 13px var(--f-data); color: var(--ink2); font-variant-numeric: tabular-nums; }
+.kpi { display: flex; flex-direction: column; gap: 5px; }
+.kpi-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 12.5px; color: var(--ink2); }
+.kpi-row .lbl { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink3); }
+.kpi-row b { font: 600 15px var(--f-data); color: var(--ink); font-variant-numeric: tabular-nums; }
+.meter { position: relative; height: 8px; background: var(--sunk); border-radius: 2px; overflow: hidden; }
+.meter i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 2px; }
+.meter.hot i { background: var(--warn); }
+.meter s { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink3); transform: translateX(-1px); }
+.kpi-note { font-size: 12.5px; color: var(--ink2); }
+.kpi-note .num { color: var(--ink); }
+.chip.flat { background: var(--sunk); color: var(--ink2); }
+.ladder { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ladder th { text-align: right; font-weight: 500; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink3); padding: 0 0 5px 8px; white-space: nowrap; }
+.ladder th:first-child, .ladder td:first-child { text-align: left; padding-left: 0; }
+.ladder td { text-align: right; padding: 5px 0 5px 8px; border-top: 1px solid var(--line); font-family: var(--f-data); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ladder td:first-child { font-family: var(--f-text); color: var(--ink2); white-space: normal; }
+.ladder tr.near td { color: var(--warn); font-weight: 600; }
+.ladder tr.near td:first-child { color: var(--warn); }
+.ladder tr.now td { background: var(--accent-soft); color: var(--accent); font-weight: 600; border-top-color: var(--accent); }
+.ladder tr.now td:first-child { color: var(--accent); }
+.ladder tr.now + tr td { border-top-color: var(--accent); }
+.lv-empty { color: var(--ink2); font-size: 13px; }
+.shift { font-size: 12.5px; color: var(--ink2); }
+.shift b { font-weight: 600; }
 .news { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .news-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
 .news-head h2 { font: 600 17px/1.1 var(--f-head); letter-spacing: 0.02em; }
@@ -213,7 +207,6 @@ body.dragging .wrap { outline: 2px dashed var(--accent); outline-offset: 6px; bo
 .foot { color: var(--ink3); font-size: 12.5px; max-width: 80ch; display: flex; flex-direction: column; gap: 4px; }
 @media (max-width: 520px) {
   .top h1 { font-size: 22px; } .clock-t { font-size: 22px; }
-  #paneP { height: 300px; } #paneR { height: 130px; }
   .px .price { font-size: 25px; }
   .rsi-bar { display: none; }
   .sm-hide { display: none; }
@@ -242,7 +235,6 @@ body.dragging .wrap { outline: 2px dashed var(--accent); outline-offset: 6px; bo
     <button class="btn" id="btnReconnect" hidden>Reconnect folder</button>
     <label class="btn" id="btnFiles" for="fileInput" tabindex="0" role="button">Add CSV files</label>
     <input type="file" id="fileInput" class="vh" multiple accept=".csv,text/csv,text/comma-separated-values" tabindex="-1">
-    <button class="btn" id="btnCloud" hidden aria-expanded="false" aria-controls="cloudForm">Cloud link</button>
     <button class="btn" id="btnClear" hidden>Clear</button>
     <label for="offsetSel">CSV time to Rome
       <select id="offsetSel">
@@ -257,15 +249,6 @@ body.dragging .wrap { outline: 2px dashed var(--accent); outline-offset: 6px; bo
     </label>
     <div class="status" id="status" role="status"></div>
   </section>
-  <form class="cloud" id="cloudForm" novalidate hidden>
-    <label for="cloudUrl">Supabase project address</label>
-    <div class="cloud-row">
-      <input type="text" inputmode="url" id="cloudUrl" placeholder="https://yourproject.supabase.co" autocomplete="off" autocapitalize="off" spellcheck="false">
-      <button class="btn primary" type="submit">Connect</button>
-      <button class="btn" type="button" id="btnCloudOff">Disconnect</button>
-    </div>
-    <p class="hint">The page reads session_desk_bundle.csv from the public bucket “session-desk” and refreshes every minute. If your bucket has another name, paste the file’s full public address. The address is remembered on this device only.</p>
-  </form>
   <p class="hint" id="hint"></p>
   <div class="banner" id="sampleBanner" hidden>Sample data. These prices are generated, not the market. Add your MT5 CSV exports to replace them.</div>
 
@@ -280,31 +263,21 @@ body.dragging .wrap { outline: 2px dashed var(--accent); outline-offset: 6px; bo
     <div id="newsBody"></div>
   </section>
 
-  <section class="chartsec" aria-label="Chart">
-    <div class="chart-head">
-      <h2 id="chartTitle">Chart</h2>
-      <div class="segs">
-        <div class="seg" id="symSeg" role="group" aria-label="Instrument"></div>
-        <div class="seg" id="tfSeg" role="group" aria-label="Timeframe"></div>
-      </div>
+  <section class="levels" aria-label="Levels and room">
+    <div class="levels-head">
+      <h2>Levels &amp; room</h2>
+      <span class="levels-sub">Distances in daily ATR. Rome time.</span>
     </div>
-    <div class="legend" id="legend"></div>
-    <div class="readout" id="readout"></div>
-    <div id="chartMsg" class="chart-msg" hidden></div>
-    <div id="chartBody">
-      <div class="pane" id="paneP"></div>
-      <div class="pane-title">RSI 14</div>
-      <div class="pane" id="paneR"></div>
-    </div>
+    <div class="lv-grid" id="levels"></div>
   </section>
 
   <footer class="foot">
     <p><b>How the lean is scored.</b> Each timeframe votes on three things: price above or below its moving average, RSI above 55 or below 45, and the direction of the RSI slope (half weight). D1 counts 3×, H4 2×, H1 1.5×, M15 1×. A score of +30 or more reads as leaning up, −30 or less as leaning down, anything between as mixed.</p>
+    <p><b>Levels &amp; room.</b> Range used is today’s high-to-low against the daily ATR of the last completed day. Typical-day reach projects one ATR from today’s low (up) and from today’s high (down). The Asian range runs from 00:00 Rome to the London open. The ladder lists the nearest levels above and below price; rows within 0.15 ATR are highlighted. Round numbers are spaced at roughly half an ATR. Latest shift is the most recent H1-or-higher bar where RSI crossed 50 or price crossed its moving average.</p>
     <p>The lean is chart structure only. The news panel lists scheduled releases from MT5’s economic calendar; it does not read headlines or judge what the market expects, so run your pre-session check before acting.</p>
   </footer>
 </div>
 
-<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 (() => {
 'use strict';
@@ -318,8 +291,10 @@ const ROME = 'Europe/Rome';
 const $ = id => document.getElementById(id);
 
 const store = { summary: new Map(), series: new Map(), files: new Set(), sample: false, lastRead: null, skipped: [], news: [], hasNews: false };
-const cfg = { offsetH: 1, refreshS: 30, sym: null, tf: 'H1', newsWeek: false, cloud: '' };
+const CLOUD_URL = 'https://rzxlwvuvakndsjbgveup.supabase.co/storage/v1/object/public/session-desk/session_desk_bundle.csv';
+const cfg = { offsetH: 1, refreshS: 30, newsWeek: false };
 try { Object.assign(cfg, JSON.parse(localStorage.getItem('mt5desk.cfg') || '{}')); } catch (e) {}
+delete cfg.cloud; delete cfg.sym; delete cfg.tf;
 const saveCfg = () => { try { localStorage.setItem('mt5desk.cfg', JSON.stringify(cfg)); } catch (e) {} };
 
 let model = [];          // built instrument views
@@ -622,12 +597,6 @@ function buildModel() {
     const age = Number.isFinite(newest) ? nowRome - (newest + off) : NaN;
     return { key: s.key, label: s.label, dec, views, price, pd, lean, newest, age, stale: age > Math.max(45, minTf * 3) * 60000 };
   });
-  if (!model.find(m => m.key === cfg.sym)) cfg.sym = model.length ? model[0].key : null;
-  const cur = model.find(m => m.key === cfg.sym);
-  if (cur) {
-    const withSer = cur.views.filter(v => v.hasSeries).map(v => v.tf);
-    if (!withSer.includes(cfg.tf)) cfg.tf = withSer.includes('H1') ? 'H1' : (withSer[0] || cur.views[0].tf);
-  }
 }
 
 /* ---------- render: sessions & clock ---------- */
@@ -727,7 +696,6 @@ function pdrHTML(m) {
   </div>`;
 }
 function rowHTML(m, v) {
-  const sel = m.key === cfg.sym && v.tf === cfg.tf;
   const rsiTag = v.rsi >= 70 ? '<span class="tag ob">OB</span>' : v.rsi <= 30 ? '<span class="tag os">OS</span>' : '';
   const rsi = Number.isFinite(v.rsi)
     ? `<span class="rsi-cell" title="${esc(v.zone || '')}">${rsiTag}${v.rsi.toFixed(1)}<span class="rsi-bar"><i style="left:${Math.max(0, Math.min(100, v.rsi)).toFixed(1)}%"></i></span></span>` : '–';
@@ -738,10 +706,7 @@ function rowHTML(m, v) {
     const pct = 100 * (m.price - v.ma.value) / v.ma.value;
     ma = `<span class="${pct >= 0 ? 'c-up' : 'c-down'}">${pct >= 0 ? '▲ +' : '▼ −'}${Math.abs(pct).toFixed(2)}%</span><span class="ma-name">${esc(v.ma.name.replace('_', ' ').toUpperCase())}</span>`;
   }
-  const btn = v.hasSeries
-    ? `<button class="tfbtn" data-sym="${esc(m.key)}" data-tf="${esc(v.tf)}" aria-pressed="${sel}" title="Show ${esc(v.tf)} chart">${esc(v.tf)}</button>`
-    : `<span class="tfbtn" style="border-color:transparent;cursor:default">${esc(v.tf)}</span>`;
-  return `<tr class="${sel ? 'sel' : ''}"><td>${btn}</td><td>${rsi}</td><td>${sl}</td><td>${fmt(v.atr, m.dec)}</td><td>${ma}</td></tr>`;
+  return `<tr><td><span class="tfl">${esc(v.tf)}</span></td><td>${rsi}</td><td>${sl}</td><td>${fmt(v.atr, m.dec)}</td><td>${ma}</td></tr>`;
 }
 function renderCards() {
   const el = $('cards');
@@ -760,6 +725,7 @@ function renderCards() {
       <div class="px"><span class="price">${fmt(m.price, m.dec)}</span>${chgH}</div>
       ${fresh}
       ${newsLine(m, nlist, nday0)}
+      ${shiftLine(m)}
       ${pdrHTML(m)}
       <div class="tfm-wrap"><table class="tfm">
         <thead><tr><th scope="col">TF</th><th scope="col">RSI 14</th><th scope="col">Slope</th><th scope="col">ATR 14</th><th scope="col">vs MA</th></tr></thead>
@@ -770,119 +736,168 @@ function renderCards() {
   }).join('');
 }
 
-/* ---------- chart ---------- */
-let charts = null, chartKey = '';
-const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-function destroyCharts() { if (charts) { try { charts.p.remove(); charts.r.remove(); } catch (e) {} charts = null; chartKey = ''; } }
-
-function renderChartControls() {
-  $('symSeg').innerHTML = model.map(m => `<button data-sym="${esc(m.key)}" aria-pressed="${m.key === cfg.sym}">${esc(m.label)}</button>`).join('');
-  const cur = model.find(m => m.key === cfg.sym);
-  $('tfSeg').innerHTML = cur ? cur.views.filter(v => v.hasSeries).map(v => `<button data-tf="${esc(v.tf)}" aria-pressed="${v.tf === cfg.tf}">${esc(v.tf)}</button>`).join('') : '';
+/* ---------- levels & room ---------- */
+const INTRA_PREF = ['M15', 'M30', 'M20', 'M10', 'M5', 'H1', 'M1'];
+const seriesOf = (m, tf) => store.series.get(m.key + '|' + tf) || null;
+function intraSeries(m) { for (const tf of INTRA_PREF) { const s = seriesOf(m, tf); if (s && s.bars.length) return s; } return null; }
+function niceStep(x) {          // round-number spacing: the first of 1, 2.5, 5, 10 x 10^k that is at least x
+  if (!(x > 0)) return NaN;
+  const p = Math.pow(10, Math.floor(Math.log10(x)));
+  for (const k of [1, 2.5, 5]) if (k * p >= x - 1e-12) return k * p;
+  return 10 * p;
 }
-function chartMessage(msg) {
-  destroyCharts();
-  $('chartBody').hidden = true; $('chartMsg').hidden = false; $('chartMsg').textContent = msg;
-  $('legend').innerHTML = ''; $('readout').innerHTML = '';
-}
-function renderChart(force) {
-  renderChartControls();
-  const m = model.find(x => x.key === cfg.sym);
-  const ser = m ? store.series.get(m.key + '|' + cfg.tf) : null;
-  $('chartTitle').textContent = m ? `${m.label} ${ser ? cfg.tf : ''}` : 'Chart';
-  if (!m) return chartMessage('Load data to see a chart.');
-  if (!ser) return chartMessage(`No bar file loaded for ${m.label}. Add its per-timeframe files (for example ${m.label.replace(/[^A-Za-z0-9]+/g, '_')}_H1_RSI.csv) to chart it.`);
-  if (!window.LightweightCharts) return chartMessage('The chart library could not load (no internet?). The tables above still work.');
-  $('chartBody').hidden = false; $('chartMsg').hidden = true;
+const sgn = (v, d) => !Number.isFinite(v) ? '–' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d);
 
-  const LC = window.LightweightCharts, off = (TF_MIN[cfg.tf] || 60) >= 1440 ? 0 : cfg.offsetH * 3600;
-  const bars = ser.bars.slice(-3000), dec = ser.dec;
-  const T = b => Math.round(b.t / 1000) + off;
-  const byTime = new Map(bars.map(b => [T(b), b]));
-  const maShown = ser.maNames.filter(n => bars.some(b => Number.isFinite(b.ma[n]))).slice(0, 2);
-  const key = m.key + '|' + cfg.tf + '|' + cfg.offsetH + '|' + maShown.join(',');
+function roomOf(m) {
+  const off = cfg.offsetH * 3600e3, d1 = seriesOf(m, 'D1'), intra = intraSeries(m), price = m.price;
+  const lastBar = intra ? intra.bars[intra.bars.length - 1] : d1 ? d1.bars[d1.bars.length - 1] : null;
+  if (!lastBar || !Number.isFinite(price)) return null;
+  const bday = Math.floor(lastBar.t / DAY) * DAY;          // current broker day (bar times are broker wall clock)
 
-  if (force || key !== chartKey || !charts) {
-    destroyCharts();
-    const base = () => ({
-      autoSize: true,
-      layout: { background: { type: 'solid', color: cssVar('--panel') }, textColor: cssVar('--ink2'), fontFamily: cssVar('--f-data'), fontSize: 11 },
-      grid: { vertLines: { color: cssVar('--grid') }, horzLines: { color: cssVar('--grid') } },
-      rightPriceScale: { borderColor: cssVar('--line'), minimumWidth: 78 },
-      timeScale: { borderColor: cssVar('--line'), timeVisible: (TF_MIN[cfg.tf] || 60) < 1440, secondsVisible: false, rightOffset: 3 },
-      crosshair: { mode: LC.CrosshairMode.Normal }
-    });
-    const p = LC.createChart($('paneP'), base());
-    const r = LC.createChart($('paneR'), base());
-    const candles = p.addCandlestickSeries({ upColor: cssVar('--candle-up'), downColor: cssVar('--candle-down'), wickUpColor: cssVar('--candle-up'), wickDownColor: cssVar('--candle-down'),
-      borderVisible: false, priceLineVisible: false, priceFormat: { type: 'price', precision: dec, minMove: Math.pow(10, -dec) } });
-    const maSeries = maShown.map((n, i) => p.addLineSeries({ color: cssVar(i ? '--series-2' : '--series-1'), lineWidth: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
-      priceFormat: { type: 'price', precision: dec, minMove: Math.pow(10, -dec) } }));
-    const rsi = r.addLineSeries({ color: cssVar('--series-1'), lineWidth: 2, priceLineVisible: false, priceFormat: { type: 'price', precision: 1, minMove: 0.1 },
-      autoscaleInfoProvider: () => ({ priceRange: { minValue: 0, maxValue: 100 } }) });
-    rsi.priceScale().applyOptions({ scaleMargins: { top: 0.08, bottom: 0.08 } });
-    for (const [lv, t] of [[70, '70'], [50, ''], [30, '30']]) rsi.createPriceLine({ price: lv, color: cssVar('--ink3'), lineWidth: 1, lineStyle: lv === 50 ? LC.LineStyle.Dotted : LC.LineStyle.Dashed, axisLabelVisible: lv !== 50, title: '' });
+  // daily ATR of the last completed day
+  let atr = NaN;
+  if (d1 && d1.bars.length > 1) { const lb = d1.bars[d1.bars.length - 1]; atr = lb.t >= bday ? d1.bars[d1.bars.length - 2].atr : lb.atr; }
+  if (!Number.isFinite(atr)) { const v = m.views.find(v => v.tf === 'D1'); if (v) atr = v.atr; }
 
-    charts = { p, r, candles, maSeries, rsi, pdLines: [], byTime: null, bars: null };
-    p.timeScale().subscribeVisibleLogicalRangeChange(rg => { if (rg && charts) charts.r.timeScale().setVisibleLogicalRange(rg); });
-    r.timeScale().subscribeVisibleLogicalRangeChange(rg => { if (rg && charts) charts.p.timeScale().setVisibleLogicalRange(rg); });
-    p.subscribeCrosshairMove(pm => {
-      if (!charts) return;
-      const b = pm.time !== undefined ? charts.byTime.get(pm.time) : null;
-      if (b && Number.isFinite(b.rsi)) charts.r.setCrosshairPosition(b.rsi, pm.time, charts.rsi); else charts.r.clearCrosshairPosition();
-      renderReadout(b);
-    });
-    r.subscribeCrosshairMove(pm => {
-      if (!charts) return;
-      const b = pm.time !== undefined ? charts.byTime.get(pm.time) : null;
-      if (b) charts.p.setCrosshairPosition(b.c, pm.time, charts.candles); else charts.p.clearCrosshairPosition();
-      renderReadout(b);
-    });
-    chartKey = key;
-    charts.fresh = true;
-  }
+  // today so far
+  let day = null;
+  if (intra) { const tb = intra.bars.filter(b => b.t >= bday); if (tb.length) day = { o: tb[0].o, h: Math.max(...tb.map(b => b.h)), l: Math.min(...tb.map(b => b.l)) }; }
+  if (!day && d1) { const lb = d1.bars[d1.bars.length - 1]; if (lb.t >= bday) day = { o: lb.o, h: lb.h, l: lb.l }; }
+  if (day) { day.h = Math.max(day.h, price); day.l = Math.min(day.l, price); }
 
-  charts.byTime = byTime; charts.bars = bars; charts.dec = dec; charts.maShown = maShown;
-  charts.candles.setData(bars.map(b => ({ time: T(b), open: b.o, high: b.h, low: b.l, close: b.c })));
-  charts.maSeries.forEach((s, i) => s.setData(bars.map(b => Number.isFinite(b.ma[maShown[i]]) ? { time: T(b), value: b.ma[maShown[i]] } : { time: T(b) })));
-  charts.rsi.setData(bars.map(b => Number.isFinite(b.rsi) ? { time: T(b), value: b.rsi } : { time: T(b) }));
-  charts.pdLines.forEach(l => charts.candles.removePriceLine(l)); charts.pdLines = [];
-  const intraday = (TF_MIN[cfg.tf] || 60) < 1440;
-  if (m.pd && intraday) {
-    for (const [v, t] of [[m.pd.h, 'PDH'], [m.pd.l, 'PDL'], [m.pd.c, 'PDC']]) {
-      if (Number.isFinite(v)) charts.pdLines.push(charts.candles.createPriceLine({ price: v, color: cssVar('--ink3'), lineWidth: 1, lineStyle: LC.LineStyle.Dashed, axisLabelVisible: true, title: t }));
+  // Asian range: 00:00 Rome to London open, on the Rome day of the latest bar
+  let asia = null;
+  if (intra && (TF_MIN[intra.tf] || 60) <= 60) {
+    const dur = (TF_MIN[intra.tf] || 15) * 6e4;
+    const endWall = Math.min(wallOf(new Date(), ROME), lastBar.t + off + dur);
+    const day0 = Math.floor((lastBar.t + off) / DAY) * DAY, dd = new Date(day0);
+    const lonWall = wallOf(new Date(zonedToInstant(dd.getUTCFullYear(), dd.getUTCMonth() + 1, dd.getUTCDate(), 8, 0, 'Europe/London')), ROME);
+    const inA = intra.bars.filter(b => b.t + off >= day0 && b.t + off + dur <= lonWall + 1);
+    if (inA.length) {
+      const h = Math.max(...inA.map(b => b.h)), l = Math.min(...inA.map(b => b.l));
+      const after = intra.bars.filter(b => b.t + off >= lonWall && b.t + off < day0 + DAY);
+      const up = after.some(b => b.h > h) || price > h, dn = after.some(b => b.l < l) || price < l;
+      asia = { h, l, lonWall, forming: endWall < lonWall, up, dn };
     }
   }
-  const marks = [];
-  if (intraday) {
-    const tfSec = (TF_MIN[cfg.tf] || 60) * 60, seen = new Set();
-    for (const n of store.news) {
-      if (n.allDay || !n.keys.includes(m.key)) continue;
-      const time = Math.floor(n.t / 1000 / tfSec) * tfSec + off;
-      if (!byTime.has(time) || seen.has(time)) continue;
-      seen.add(time);
-      marks.push({ time, position: 'aboveBar', color: cssVar('--warn'), shape: 'arrowDown', text: n.cur });
-    }
-    marks.sort((a, b) => a.time - b.time);
-  }
-  charts.candles.setMarkers(marks);
-  if (charts.fresh) { charts.p.timeScale().setVisibleLogicalRange({ from: bars.length - 110, to: bars.length + 3 }); charts.fresh = false; }
 
-  $('legend').innerHTML = `<span><i class="sw cu"></i><i class="sw cd"></i>Up / down bar</span>`
-    + maShown.map((n, i) => `<span><i class="sw s${i + 1}"></i>${esc(n.replace('_', ' ').toUpperCase())}</span>`).join('')
-    + (m.pd && intraday ? `<span><i class="sw dash"></i>Previous day high, low, close</span>` : '')
-    + (marks.length ? `<span>\u25bc High-impact release</span>` : '')
-    + `<span>Times in Rome</span>`;
-  renderReadout(null);
+  // previous week from W1 or D1 bars
+  let pw = null;
+  const w1 = seriesOf(m, 'W1');
+  if (w1 && w1.bars.length > 1) { const b = w1.bars[w1.bars.length - 2]; pw = { h: b.h, l: b.l }; }
+  else if (d1) {
+    const dow = new Date(bday).getUTCDay(), mon = bday - ((dow + 6) % 7) * DAY;
+    const wk = d1.bars.filter(b => b.t >= mon - 7 * DAY && b.t < mon);
+    if (wk.length) pw = { h: Math.max(...wk.map(b => b.h)), l: Math.min(...wk.map(b => b.l)) };
+  }
+  return { atr, day, asia, pw, price };
 }
-function renderReadout(b) {
-  if (!charts || !charts.bars || !charts.bars.length) return;
-  b = b || charts.bars[charts.bars.length - 1];
-  const d = charts.dec, kv = (k, v) => `<span><span class="k">${k}</span><b>${v}</b></span>`;
-  const daily = (TF_MIN[cfg.tf] || 60) >= 1440, wall = b.t + (daily ? 0 : cfg.offsetH * 3600e3);
-  $('readout').innerHTML = kv('', fmtWall(wall, true)) + kv('O', fmt(b.o, d)) + kv('H', fmt(b.h, d)) + kv('L', fmt(b.l, d)) + kv('C', fmt(b.c, d))
-    + charts.maShown.map(n => kv(esc(n.replace('_', ' ').toUpperCase()), fmt(b.ma[n], d))).join('')
-    + kv('RSI', fmt(b.rsi, 1)) + kv('ATR', fmt(b.atr, d));
+
+function ladderOf(m, r) {
+  const { atr, day, asia, pw, price } = r, raw = [];
+  const add = (name, v, round) => { if (Number.isFinite(v)) raw.push({ name, v, round: !!round }); };
+  if (m.pd) { add('Prev day high', m.pd.h); add('Prev day low', m.pd.l); add('Prev day close', m.pd.c); }
+  if (day) { add('Day open', day.o); add('Day high', day.h); add('Day low', day.l); }
+  if (asia) { add('Asian high', asia.h); add('Asian low', asia.l); }
+  if (pw) { add('Prev week high', pw.h); add('Prev week low', pw.l); }
+  const step = niceStep(atr / 2);
+  if (Number.isFinite(step)) { const k0 = Math.floor(price / step); for (let k = k0 - 2; k <= k0 + 3; k++) add('Round number', +(k * step).toFixed(8), true); }
+  raw.sort((a, b) => b.v - a.v);
+  const tol = Number.isFinite(atr) ? atr * 0.03 : 0, merged = [];
+  for (const x of raw) {
+    const last = merged[merged.length - 1];
+    if (last && Math.abs(last.v - x.v) <= tol) {
+      if (x.round && !last.round) continue;
+      if (last.round && !x.round) { last.names = [x.name]; last.v = x.v; last.round = false; continue; }
+      if (!last.names.includes(x.name)) last.names.push(x.name);
+    } else merged.push({ names: [x.name], v: x.v, round: x.round });
+  }
+  const above = merged.filter(x => x.v > price).slice(-3), below = merged.filter(x => x.v <= price).slice(0, 3);
+  return { above, below };
+}
+
+function levelsHTML(m) {
+  const r = roomOf(m);
+  if (!r) return `<div class="lv"><h3>${esc(m.label)}</h3><p class="lv-empty">Needs intraday bar files (M15 or H1) and D1 to work out levels.</p></div>`;
+  const { atr, day, asia, price } = r, d = m.dec, hasAtr = Number.isFinite(atr) && atr > 0;
+  let html = `<div class="lv"><h3>${esc(m.label)}<span class="px2">${fmt(price, d)}</span></h3>`;
+
+  // range used
+  if (day && hasAtr) {
+    const rng = day.h - day.l, pct = 100 * rng / atr, scale = Math.max(100, pct * 1.05);
+    const upTo = day.l + atr, dnTo = day.h - atr;
+    html += `<div class="kpi">
+      <div class="kpi-row"><span class="lbl">Range used today</span><b>${Math.round(pct)}%</b></div>
+      <div class="meter${pct >= 85 ? ' hot' : ''}" role="img" aria-label="${Math.round(pct)}% of daily ATR used"><i style="width:${(100 * pct / scale).toFixed(1)}%"></i><s style="left:${(100 * 100 / scale).toFixed(1)}%"></s></div>
+      <div class="kpi-note">Day range <span class="num">${fmt(rng, d)}</span> of ATR <span class="num">${fmt(atr, d)}</span>. ${pct >= 100
+        ? 'Already wider than a typical day.'
+        : `Typical-day reach: ▲ <span class="num">${fmt(upTo, d)}</span> (${sgn(upTo - price, d)}) · ▼ <span class="num">${fmt(dnTo, d)}</span> (${sgn(dnTo - price, d)})`}</div>
+    </div>`;
+  } else html += `<p class="lv-empty">No bars for today yet, or no daily ATR.</p>`;
+
+  // Asian range
+  if (asia) {
+    const size = asia.h - asia.l, rel = hasAtr ? ` (${Math.round(100 * size / atr)}% ATR)` : '';
+    let chip, note;
+    if (asia.forming) { chip = '<span class="chip flat">Forming</span>'; note = `London opens ${hhmm(asia.lonWall)}.`; }
+    else if (asia.up && asia.dn) { chip = '<span class="chip mixed">Broke both sides</span>'; note = ''; }
+    else if (asia.up) { chip = '<span class="chip up">▲ Broke up</span>'; note = ''; }
+    else if (asia.dn) { chip = '<span class="chip down">▼ Broke down</span>'; note = ''; }
+    else { chip = '<span class="chip flat">Inside</span>'; note = 'No break since London open.'; }
+    const where = price > asia.h ? `Price ${fmt(price - asia.h, d)} above the high.` : price < asia.l ? `Price ${fmt(asia.l - price, d)} below the low.` : 'Price back inside.';
+    if (!asia.forming && (asia.up || asia.dn)) note = where;
+    html += `<div class="kpi">
+      <div class="kpi-row"><span class="lbl">Asian range 00:00–${hhmm(asia.lonWall)}</span>${chip}</div>
+      <div class="kpi-note"><span class="num">${fmt(asia.l, d)} – ${fmt(asia.h, d)}</span>, size <span class="num">${fmt(size, d)}</span>${rel}. ${note}</div>
+    </div>`;
+  }
+
+  // ladder
+  const { above, below } = ladderOf(m, r);
+  const row = x => {
+    const dist = x.v - price, ar = hasAtr ? Math.abs(dist) / atr : NaN, near = Number.isFinite(ar) && ar < 0.15;
+    return `<tr class="${near ? 'near' : ''}"><td>${esc(x.names.join(' · '))}</td><td>${fmt(x.v, d)}</td><td>${sgn(dist, d)}</td><td>${Number.isFinite(ar) ? ar.toFixed(2) : '–'}</td></tr>`;
+  };
+  html += `<table class="ladder"><thead><tr><th scope="col">Level</th><th scope="col">Price</th><th scope="col">Distance</th><th scope="col">× ATR</th></tr></thead><tbody>
+    ${above.map(row).join('')}
+    <tr class="now"><td>Now</td><td>${fmt(price, d)}</td><td></td><td></td></tr>
+    ${below.map(row).join('')}
+  </tbody></table></div>`;
+  return html;
+}
+function renderLevels() {
+  const el = $('levels');
+  el.innerHTML = model.length ? model.map(levelsHTML).join('') : '<p class="lv-empty">Load data to see levels.</p>';
+}
+
+/* latest RSI-50 or moving-average cross on H1 and higher */
+function shiftLine(m) {
+  const off = cfg.offsetH * 3600e3, nowRome = wallOf(new Date(), ROME);
+  let best = null;
+  for (const v of m.views) {
+    const tfm = TF_MIN[v.tf] || 0;
+    if (tfm < 60 || !v.hasSeries) continue;
+    const b = seriesOf(m, v.tf).bars, ma = v.ma && v.ma.name;
+    for (let i = b.length - 1; i >= Math.max(1, b.length - 60); i--) {
+      const ev = [];
+      const open = i === b.length - 1, man = ma ? ma.replace('_', ' ').toUpperCase() : '';
+      if (Number.isFinite(b[i].rsi) && Number.isFinite(b[i - 1].rsi) && (b[i].rsi - 50) * (b[i - 1].rsi - 50) < 0)
+        ev.push(b[i].rsi > 50 ? ['up', open ? 'RSI crossing above 50' : 'RSI rose above 50'] : ['down', open ? 'RSI crossing below 50' : 'RSI fell below 50']);
+      if (ma && Number.isFinite(b[i].ma[ma]) && Number.isFinite(b[i - 1].ma[ma]) && (b[i].c - b[i].ma[ma]) * (b[i - 1].c - b[i - 1].ma[ma]) < 0)
+        ev.push(b[i].c > b[i].ma[ma] ? ['up', `${open ? 'crossing' : 'closed'} above its ${man}`] : ['down', `${open ? 'crossing' : 'closed'} below its ${man}`]);
+      if (ev.length) {
+        const daily = tfm >= 1440, wall = b[i].t + (daily ? 0 : off), cand = { tf: v.tf, wall, daily, ev, current: i === b.length - 1, endWall: wall + tfm * 6e4 };
+        if (!best || cand.endWall > best.endWall || (cand.endWall === best.endWall && tfm > (TF_MIN[best.tf] || 0))) best = cand;
+        break;
+      }
+    }
+  }
+  if (!best) return '';
+  const dir = best.ev[0][0], what = best.ev.map(e => e[1]).join(' and ');
+  const when = best.daily ? (best.current ? 'on today’s open bar' : 'on ' + dayLabel(best.wall))
+    : best.current ? `on the open ${fmtWall(best.wall, false)} bar`
+    : `${fmtWall(best.wall, nowRome - best.wall > 20 * 3600e3)} bar, ${ago(Math.max(0, nowRome - best.endWall))}`;
+  return `<div class="shift">Latest shift: <b class="${dir === 'up' ? 'c-up' : 'c-down'}">${dir === 'up' ? '▲' : '▼'} ${esc(best.tf)} ${esc(what)}</b>, ${when}${best.current ? ' (not confirmed)' : ''}</div>`;
 }
 
 /* ---------- status & refresh ---------- */
@@ -903,10 +918,10 @@ function renderStatus(extra) {
   $('offsetSel').value = String(cfg.offsetH); $('offsetSel').disabled = autoOff;
   $('offsetSel').title = autoOff ? 'Set automatically from the broker clock in the export' : '';
   $('sampleBanner').hidden = !store.sample;
-  $('btnClear').hidden = store.sample;
+  $('btnClear').hidden = store.sample || cloudOn;
   $('refreshLbl').hidden = !dirHandle;
 }
-function refreshAll(forceChart) { buildModel(); renderNews(); renderCards(); renderChart(forceChart); renderStatus(); saveCfg(); }
+function refreshAll() { buildModel(); renderNews(); renderCards(); renderLevels(); renderStatus(); saveCfg(); }
 
 function beginReal() { if (store.sample) { store.summary.clear(); store.series.clear(); store.files.clear(); store.news = []; store.hasNews = false; store.sample = false; } }
 async function addFiles(fileList) {
@@ -922,7 +937,7 @@ async function addFiles(fileList) {
       if (why) store.skipped.push(`${f.name} (${why})`); else { store.files.add(f.name); took++; }
     } catch (e) { store.skipped.push(`${f.name} (could not be read)`); }
   }
-  if (!store.files.size) { loadSample(); const sk = store.skipped; refreshAll(true); store.skipped = sk; return renderStatus(); }
+  if (!store.files.size) { loadSample(); const sk = store.skipped; refreshAll(); store.skipped = sk; return renderStatus(); }
   if (took) store.lastRead = new Date();
   refreshAll();
 }
@@ -931,40 +946,30 @@ async function addFiles(fileList) {
 const topLevel = (() => { try { return window.self === window.top; } catch (e) { return false; } })();
 const canLink = topLevel && 'showDirectoryPicker' in window;
 
-/* cloud link: the MT5 service uploads the bundle to Supabase Storage, this page reads it */
+/* live data: the MT5 service uploads the bundle to Supabase Storage, this page reads it every minute */
 let cloudTimer = null, cloudLast = '', cloudOn = false;
-function cloudAddress(v) {
-  v = String(v || '').trim();
-  if (!v) return '';
-  if (!/^https?:\/\//i.test(v)) v = 'https://' + v;
-  if (/\.csv(\?.*)?$/i.test(v)) return v;
-  return v.replace(/\/+$/, '') + '/storage/v1/object/public/session-desk/session_desk_bundle.csv';
-}
 async function readCloud() {
-  const u = cloudAddress(cfg.cloud);
-  if (!u) return;
   try {
-    const res = await fetch(u + (u.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
+    const res = await fetch(CLOUD_URL + '?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return renderStatus(res.status === 400 || res.status === 404
-      ? 'No bundle at that address yet. Check that the bucket is public and the MT5 service is uploading.'
+      ? 'No bundle on Supabase yet. Check that the MT5 service is uploading.'
       : 'Supabase answered with error ' + res.status + '.');
     const text = decode(await res.arrayBuffer());
-    if (!/^\uFEFF?#FILE /.test(text)) return renderStatus('That address did not return a Session Desk bundle.');
-    if (text === cloudLast && cloudOn) return renderStatus();
+    if (!/^﻿?#FILE /.test(text)) return renderStatus('Supabase did not return a Session Desk bundle.');
+    if (text === cloudLast && cloudOn) { store.lastRead = new Date(); return renderStatus(); }
     beginReal(); store.skipped = [];
     const why = ingest('session_desk_bundle.csv', text);
-    if (why) { if (!store.files.size) { loadSample(); refreshAll(true); } return renderStatus('The bundle could not be read (' + why + ').'); }
+    if (why) { if (!store.files.size) { loadSample(); refreshAll(); } return renderStatus('The bundle could not be read (' + why + ').'); }
     cloudLast = text; cloudOn = true; store.files.add('session_desk_bundle.csv'); store.lastRead = new Date();
     refreshAll();
-  } catch (e) { renderStatus('Could not reach Supabase. Check the address and your connection.'); }
+  } catch (e) { if (topLevel || cloudOn) renderStatus('Could not reach Supabase. Check your connection.'); }
 }
 function startCloud() {
-  clearInterval(cloudTimer); cloudTimer = null;
-  if (!topLevel || !cfg.cloud) return;
+  clearInterval(cloudTimer);
   readCloud();
   cloudTimer = setInterval(readCloud, 60000);
 }
-function stopCloud() { clearInterval(cloudTimer); cloudTimer = null; cfg.cloud = ''; cloudLast = ''; cloudOn = false; saveCfg(); }
+function stopCloud() { clearInterval(cloudTimer); cloudTimer = null; cloudLast = ''; cloudOn = false; }
 function idb(mode, fn) {
   return new Promise((res, rej) => {
     const rq = indexedDB.open('mt5desk', 1);
@@ -994,7 +999,7 @@ async function readDir() {
   store.skipped = skipped;
   if (changed) { store.lastRead = new Date(); refreshAll(); }
   else if (!store.files.size) {
-    if (!store.sample) { loadSample(); refreshAll(true); }
+    if (!store.sample) { loadSample(); refreshAll(); }
     renderStatus('No RSI export files in that folder or its subfolders yet. It needs latest_rsi_summary.csv and files like EURUSD_i_H1_RSI.csv.');
   }
   else renderStatus();
@@ -1012,20 +1017,12 @@ async function linkFolder() {
 /* ---------- wiring ---------- */
 $('offsetSel').value = String(cfg.offsetH);
 $('refreshSel').value = String(cfg.refreshS);
-$('offsetSel').addEventListener('change', e => { cfg.offsetH = +e.target.value; if (store.sample) loadSample(); refreshAll(true); });
+$('offsetSel').addEventListener('change', e => { cfg.offsetH = +e.target.value; if (store.sample) loadSample(); refreshAll(); });
 $('refreshSel').addEventListener('change', e => { cfg.refreshS = +e.target.value; saveCfg(); startTimer(); });
 $('btnFiles').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('fileInput').click(); } });
 $('btnNewsSpan').addEventListener('click', () => { cfg.newsWeek = !cfg.newsWeek; saveCfg(); renderNews(); });
 $('fileInput').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
-$('btnClear').addEventListener('click', () => { stopCloud(); $('cloudUrl').value = ''; clearInterval(timer); timer = null; dirHandle = null; dirSeen = new Map(); idb('readwrite', s => s.delete('dir')).catch(() => {}); loadSample(); refreshAll(true); });
-document.addEventListener('click', e => {
-  const b = e.target.closest('button[data-sym],button[data-tf]');
-  if (!b) return;
-  if (b.dataset.sym) cfg.sym = b.dataset.sym;
-  if (b.dataset.tf) cfg.tf = b.dataset.tf;
-  refreshAll();
-  if (b.classList.contains('tfbtn')) document.querySelector('.chartsec').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-});
+$('btnClear').addEventListener('click', () => { clearInterval(timer); timer = null; dirHandle = null; dirSeen = new Map(); idb('readwrite', s => s.delete('dir')).catch(() => {}); loadSample(); refreshAll(); });
 let dragDepth = 0;
 window.addEventListener('dragenter', e => { e.preventDefault(); dragDepth++; document.body.classList.add('dragging'); });
 window.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dragging'); } });
@@ -1035,24 +1032,9 @@ window.addEventListener('drop', e => { e.preventDefault(); dragDepth = 0; docume
 $('hint').textContent = canLink
   ? 'Start the SessionDeskService in MT5, then link the folder it writes to (by default Downloads\\SessionDesk): this page re-reads it on its own. You can also drop CSV files anywhere on the page.'
   : topLevel
-  ? 'For live data, tap Cloud link and enter your Supabase project address. Or tap Add CSV files and pick session_desk_bundle.csv from the SessionDesk folder in OneDrive.'
+  ? 'Live data loads from Supabase on its own and refreshes every minute. You can still tap Add CSV files and pick session_desk_bundle.csv from the SessionDesk folder in OneDrive.'
   : 'Drop your MT5 CSV exports anywhere on this page, or use Add CSV files: latest_rsi_summary.csv plus the SYMBOL_TF_RSI.csv files that the SessionDeskService writes. On a phone, tap Add CSV files and pick session_desk_bundle.csv from the SessionDesk folder in OneDrive; pick it again whenever you want fresh numbers. For hands-free refresh from the MT5 folder, open the desktop copy of this page in Chrome or Edge.';
-if (topLevel) {
-  $('btnCloud').hidden = false;
-  $('cloudUrl').value = cfg.cloud || '';
-  $('btnCloud').addEventListener('click', () => { const f = $('cloudForm'); f.hidden = !f.hidden; $('btnCloud').setAttribute('aria-expanded', String(!f.hidden)); if (!f.hidden) $('cloudUrl').focus(); });
-  $('cloudForm').addEventListener('submit', e => {
-    e.preventDefault();
-    const v = $('cloudUrl').value.trim();
-    if (!v) return renderStatus('Enter your Supabase project address first.');
-    cfg.cloud = v; cloudLast = ''; cloudOn = false; saveCfg();
-    $('cloudForm').hidden = true; $('btnCloud').setAttribute('aria-expanded', 'false');
-    $('status').textContent = 'Connecting to Supabase\u2026';
-    startCloud();
-  });
-  $('btnCloudOff').addEventListener('click', () => { stopCloud(); $('cloudUrl').value = ''; $('cloudForm').hidden = true; $('btnCloud').setAttribute('aria-expanded', 'false'); loadSample(); refreshAll(true); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && cfg.cloud) readCloud(); });
-}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) readCloud(); });
 if (canLink) {
   $('btnFolder').hidden = false;
   $('btnFolder').addEventListener('click', linkFolder);
@@ -1064,21 +1046,16 @@ if (canLink) {
   }).catch(() => {});
 }
 
-const themeChanged = () => renderChart(true);
-new MutationObserver(themeChanged).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themeChanged); } catch (e) {}
-
 loadSample();
-refreshAll(true);
+refreshAll();
 renderClock(); renderSessions();
 startCloud();
 setInterval(renderClock, 1000);
-setInterval(() => { renderSessions(); buildModel(); renderNews(); renderCards(); }, 30000);
+setInterval(() => { renderSessions(); buildModel(); renderNews(); renderCards(); renderLevels(); }, 30000);
 
 /* test hook for the parser (no UI depends on it) */
 window.__mt5desk = { addFiles, store, cfg };
 })();
 </script>
 
-</body>
-</html>
+</body></html>
