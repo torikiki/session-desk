@@ -592,9 +592,7 @@ function newsLine(m, list, day0) {
   const mine = list.filter(n => !n.allDay && n.keys.includes(m.key));
   const win = mine.find(n => n.diff <= 1800e3 && n.diff >= -1800e3);
   if (win) return `<div class="newsline warn">\u26a0 News window: ${esc(win.cur)} ${esc(win.name)}, ${win.diff > 0 ? until(win.diff) : ago(-win.diff)}</div>`;
-  const nxt = mine.find(n => n.diff > 0);
-  if (nxt) return `<div class="newsline">Next news ${fmtWall(nxt.w, nxt.w >= day0 + DAY)}: ${esc(nxt.cur)} ${esc(nxt.name)}, ${until(nxt.diff)}</div>`;
-  return '<div class="newsline">No high-impact news ahead in the next 7 days</div>';
+  return '';
 }
 
 /* ---------- render: cards ---------- */
