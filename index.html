@@ -928,6 +928,11 @@ function cotHTML(m) {
   const row = (lbl, k) => { const c = net(cur[k]), d = c - net(prv[k]);
     return `<tr><td>${lbl}</td><td>${cur[k][0].toLocaleString('en-US')}</td><td>${cur[k][1].toLocaleString('en-US')}</td><td class="num ${cotCls(c)}">${fmtK(c)}</td><td class="num ${cotCls(d)}">${fmtK(d)}</td></tr>`; };
   const dd = new Date(cur.date + 'T00:00:00Z');
+  // next release: the Friday after the latest report date, 15:30 New York (skip ahead a week if that has passed but data has not updated yet)
+  let fri = dd.getTime() + 3 * DAY;
+  const rel = () => { const f = new Date(fri); return zonedToInstant(f.getUTCFullYear(), f.getUTCMonth() + 1, f.getUTCDate(), 15, 30, 'America/New_York'); };
+  while (rel() <= Date.now()) fri += 7 * DAY;
+  const relWall = wallOf(new Date(rel()), ROME);
   return `<div class="lv">
     <h3><span>${esc(m.label)}</span>${chip}</h3>
     <div class="kpi">
@@ -942,7 +947,7 @@ function cotHTML(m) {
     <table class="ladder"><thead><tr><th scope="col">Group</th><th scope="col">Long</th><th scope="col">Short</th><th scope="col">Net</th><th scope="col">Wk Δ</th></tr></thead><tbody>
       ${row('Large specs', 'spec')}${row('Commercials', 'comm')}${row('Small traders', 'small')}
     </tbody></table>
-    <div class="cot-src">${esc(map.name)} · positions as of ${dayLabel(dd.getTime())} · OI ${cur.oi.toLocaleString('en-US')}</div>
+    <div class="cot-src">${esc(map.name)} · positions as of ${dayLabel(dd.getTime())} · next report ${dayLabel(relWall)}, ${hhmm(relWall)} Rome · OI ${cur.oi.toLocaleString('en-US')}</div>
   </div>`;
 }
 function renderCot() {
