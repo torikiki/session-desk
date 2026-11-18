@@ -179,6 +179,8 @@ button, select { font: inherit; color: inherit; }
 .ladder tr.now td:first-child { color: var(--accent); }
 .ladder tr.now + tr td { border-top-color: var(--accent); }
 .lv-empty { color: var(--ink2); font-size: 13px; }
+.cot-src { font-size: 12px; color: var(--ink3); }
+.num.up { color: var(--up); } .num.down { color: var(--down); }
 .shift { font-size: 12.5px; color: var(--ink2); }
 .shift b { font-weight: 600; }
 .news { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
@@ -255,10 +257,19 @@ button, select { font: inherit; color: inherit; }
     <div class="lv-grid" id="levels"></div>
   </section>
 
+  <section class="levels" aria-label="COT positioning">
+    <div class="levels-head">
+      <h2>COT positioning</h2>
+      <span class="levels-sub" id="cotSub">CFTC Commitments of Traders, futures only. Weekly.</span>
+    </div>
+    <div class="lv-grid" id="cot"></div>
+  </section>
+
   <footer class="foot">
     <p><b>How the lean is scored.</b> Each timeframe votes on three things: price above or below its moving average, RSI above 55 or below 45, and the direction of the RSI slope (half weight). D1 counts 3×, H4 2×, H1 1.5×, M15 1×. A score of +30 or more reads as leaning up, −30 or less as leaning down, anything between as mixed.</p>
     <p><b>Previous day and week bars.</b> The band runs from that period’s low to its high, the tick marks its close and the dot is the current price. The week comes from the W1 bar, or from D1 bars when W1 is not in the bundle.</p>
     <p><b>Levels &amp; room.</b> Range used is today’s high-to-low against the daily ATR of the last completed day. Typical-day reach projects one ATR from today’s low (up) and from today’s high (down). The Asian range runs from 00:00 Rome to the London open. The ladder lists the nearest levels above and below price; rows within 0.15 ATR are highlighted. Round numbers are spaced at roughly half an ATR. Latest shift is the most recent H1-or-higher bar where RSI crossed 50 or price crossed its moving average.</p>
+    <p><b>COT positioning.</b> From the CFTC legacy futures-only report: EURUSD uses CME Euro FX, NDX100 the CME Nasdaq-100 E-mini, XAUUSD COMEX gold. Positions are as of Tuesday and published Friday 15:30 New York time (21:30 Rome). Large specs are non-commercial traders. The 3-year index places this week’s large-spec net between its lowest (0) and highest (100) reading of the last 156 weeks; at 10 or below, or 90 or above, positioning is crowded.</p>
     <p>The lean is chart structure only. The news panel lists scheduled releases from MT5’s economic calendar; it does not read headlines or judge what the market expects, so run your pre-session check before acting.</p>
   </footer>
 </div>
@@ -834,7 +845,7 @@ function renderStatus() {
   $('offsetSel').value = String(cfg.offsetH);
   $('offsetLbl').hidden = !cloudOn || Number.isFinite(store.serverOffMin);   // only needed when the export lacks the broker clock
 }
-function refreshAll() { buildModel(); renderNews(); renderCards(); renderLevels(); renderStatus(); saveCfg(); }
+function refreshAll() { buildModel(); renderNews(); renderCards(); renderLevels(); renderCot(); renderStatus(); saveCfg(); }
 
 /* ---------- live data: the MT5 service uploads the bundle to Supabase Storage, this page reads it every minute ---------- */
 let cloudLast = '', cloudOn = false, cloudErr = '';
@@ -868,12 +879,85 @@ $('offsetSel').addEventListener('change', e => { cfg.offsetH = +e.target.value; 
 $('btnNewsSpan').addEventListener('click', () => { cfg.newsWeek = !cfg.newsWeek; saveCfg(); renderNews(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) readCloud(); });
 
+/* ---------- COT (CFTC legacy futures-only, public API) ---------- */
+const COT_URL = 'https://publicreporting.cftc.gov/resource/6dca-aqww.json';
+const COT_MAP = [
+  { re: /^EUR_?USD/, code: '099741', name: 'CME Euro FX' },
+  { re: /^(NDX|NAS|US_?100|USTEC)/, code: '209742', name: 'CME Nasdaq-100 E-mini' },
+  { re: /^(XAU|GOLD)/, code: '088691', name: 'COMEX gold' },
+];
+const COT_WEEKS = 156;
+let cot = null, cotErr = '', cotAt = 0;
+const cotOf = key => COT_MAP.find(c => c.re.test(key));
+async function readCot() {
+  try {
+    const codes = COT_MAP.map(c => `'${c.code}'`).join(',');
+    const q = new URLSearchParams({
+      $select: 'cftc_contract_market_code,report_date_as_yyyy_mm_dd,open_interest_all,noncomm_positions_long_all,noncomm_positions_short_all,comm_positions_long_all,comm_positions_short_all,nonrept_positions_long_all,nonrept_positions_short_all',
+      $where: `cftc_contract_market_code in(${codes})`,
+      $order: 'report_date_as_yyyy_mm_dd DESC',
+      $limit: String(COT_MAP.length * (COT_WEEKS + 4)),
+    });
+    const res = await fetch(`${COT_URL}?${q}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const rows = await res.json(), by = {};
+    for (const r of rows) {
+      const n = k => Number(r[k]);
+      (by[r.cftc_contract_market_code] ||= []).push({
+        date: r.report_date_as_yyyy_mm_dd.slice(0, 10), oi: n('open_interest_all'),
+        spec: [n('noncomm_positions_long_all'), n('noncomm_positions_short_all')],
+        comm: [n('comm_positions_long_all'), n('comm_positions_short_all')],
+        small: [n('nonrept_positions_long_all'), n('nonrept_positions_short_all')],
+      });
+    }
+    cot = by; cotErr = ''; cotAt = Date.now();
+  } catch (e) { cotErr = 'Could not load COT data from the CFTC.'; }
+  renderCot();
+}
+const fmtK = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toLocaleString('en-US');
+const cotCls = v => v > 0 ? 'up' : v < 0 ? 'down' : '';
+function cotHTML(m) {
+  const map = cotOf(m.key), wk = map && cot && cot[map.code];
+  if (!map) return '';
+  if (!wk || wk.length < 2) return `<div class="lv"><h3>${esc(m.label)}</h3><p class="lv-empty">${cotErr || 'Loading…'}</p></div>`;
+  const net = x => x[0] - x[1], cur = wk[0], prv = wk[1];
+  const hist = wk.slice(0, COT_WEEKS).map(w => net(w.spec)), lo = Math.min(...hist), hi = Math.max(...hist);
+  const sn = net(cur.spec), idx = hi > lo ? Math.round(100 * (sn - lo) / (hi - lo)) : 50, crowd = idx <= 10 || idx >= 90;
+  const longPct = Math.round(100 * cur.spec[0] / (cur.spec[0] + cur.spec[1] || 1));
+  const chip = sn > 0 ? '<span class="chip up">▲ Specs net long</span>' : sn < 0 ? '<span class="chip down">▼ Specs net short</span>' : '<span class="chip flat">Specs flat</span>';
+  const row = (lbl, k) => { const c = net(cur[k]), d = c - net(prv[k]);
+    return `<tr><td>${lbl}</td><td>${cur[k][0].toLocaleString('en-US')}</td><td>${cur[k][1].toLocaleString('en-US')}</td><td class="num ${cotCls(c)}">${fmtK(c)}</td><td class="num ${cotCls(d)}">${fmtK(d)}</td></tr>`; };
+  const dd = new Date(cur.date + 'T00:00:00Z');
+  return `<div class="lv">
+    <h3><span>${esc(m.label)}</span>${chip}</h3>
+    <div class="kpi">
+      <div class="kpi-row"><span class="lbl">Large specs net</span><b class="num ${cotCls(sn)}">${fmtK(sn)}</b></div>
+      <div class="kpi-row"><span>${longPct}% of spec positions are long</span><span>Week change <b class="num ${cotCls(sn - net(prv.spec))}">${fmtK(sn - net(prv.spec))}</b></span></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-row"><span class="lbl">3-year index</span><b>${idx}</b></div>
+      <div class="meter${crowd ? ' hot' : ''}" role="img" aria-label="3-year positioning index ${idx} of 100"><i style="width:${idx}%"></i></div>
+      <div class="kpi-note">${crowd ? `⚠ Crowded ${idx >= 90 ? 'long' : 'short'}: spec net is at the ${idx >= 90 ? 'top' : 'bottom'} of its 3-year range.` : `Range ${fmtK(lo)} to ${fmtK(hi)} contracts.`}</div>
+    </div>
+    <table class="ladder"><thead><tr><th scope="col">Group</th><th scope="col">Long</th><th scope="col">Short</th><th scope="col">Net</th><th scope="col">Wk Δ</th></tr></thead><tbody>
+      ${row('Large specs', 'spec')}${row('Commercials', 'comm')}${row('Small traders', 'small')}
+    </tbody></table>
+    <div class="cot-src">${esc(map.name)} · positions as of ${dayLabel(dd.getTime())} · OI ${cur.oi.toLocaleString('en-US')}</div>
+  </div>`;
+}
+function renderCot() {
+  const el = $('cot'), html = model.map(cotHTML).join('');
+  el.innerHTML = html || `<p class="lv-empty">${model.length ? 'No COT market mapped for these symbols.' : 'Waiting for data.'}</p>`;
+}
+
 refreshAll();
 renderClock(); renderSessions();
 readCloud();
+readCot();
+setInterval(() => { if (Date.now() - cotAt > 3 * 3600e3) readCot(); }, 15 * 60e3);
 setInterval(readCloud, CLOUD_EVERY_S * 1000);
 setInterval(renderClock, 1000);
-setInterval(() => { renderSessions(); buildModel(); renderNews(); renderCards(); renderLevels(); }, 30000);
+setInterval(() => { renderSessions(); buildModel(); renderNews(); renderCards(); renderLevels(); renderCot(); }, 30000);
 })();
 </script>
 
