@@ -187,6 +187,13 @@ button, select { font: inherit; color: inherit; }
 .news-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
 .news-head h2 { font: 600 17px/1.1 var(--f-head); letter-spacing: 0.02em; }
 .news-sub { color: var(--ink2); font-size: 13px; flex: 1 1 200px; min-width: 0; }
+.news-link { color: var(--accent); font-size: 14px; text-underline-offset: 3px; }
+.calendar-guide { color: var(--ink2); font-size: 14px; }
+.calendar-guide strong { color: var(--ink); font-weight: 500; }
+.calendar-frame { display: block; width: 100%; height: 540px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color-scheme: light; }
+.calendar-credit { color: var(--ink3); font-size: 13px; }
+.calendar-credit a { color: var(--accent); }
+@media (max-width: 520px) { .calendar-frame { height: 620px; } }
 .news-wrap { overflow-x: auto; }
 .newst { width: 100%; border-collapse: collapse; font-size: 13px; }
 .newst th { text-align: left; font-weight: 500; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink3); padding: 0 12px 5px 0; white-space: nowrap; }
@@ -243,10 +250,12 @@ button, select { font: inherit; color: inherit; }
   <section class="news" aria-label="High-impact news">
     <div class="news-head">
       <h2>High-impact news</h2>
-      <span class="news-sub" id="newsSub"></span>
-      <button class="btn" id="btnNewsSpan" hidden>Show 7 days</button>
+      <span class="news-sub">EUR &amp; USD · High impact · Myfxbook</span>
+      <a class="news-link" href="https://widget.mfbcdn.net/widget/calendar.html?lang=en&amp;impacts=3&amp;symbols=EUR,USD" target="_blank" rel="noopener noreferrer">Open calendar</a>
     </div>
-    <div id="newsBody"></div>
+    <p class="calendar-guide" id="calendarGuide">Use the calendar's date picker to select yesterday through tomorrow, and its clock menu to select Rome's current GMT offset.</p>
+    <iframe class="calendar-frame" title="Myfxbook economic calendar: high-impact EUR and USD events" src="https://widget.mfbcdn.net/widget/calendar.html?lang=en&amp;impacts=3&amp;symbols=EUR,USD" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" aria-describedby="calendarGuide calendarHelp"></iframe>
+    <p class="calendar-credit" id="calendarHelp"><a href="https://www.myfxbook.com/forex-economic-calendar?utm_source=widget13&amp;utm_medium=link&amp;utm_campaign=copyright" target="_blank" rel="noopener noreferrer">Economic Calendar</a> by Myfxbook.com. Result colours are Myfxbook's assessment; they are not instrument buy/sell signals. If the calendar is blank, use Open calendar.</p>
   </section>
 
   <section class="levels" aria-label="Levels and room">
@@ -270,7 +279,7 @@ button, select { font: inherit; color: inherit; }
     <p><b>Previous day and week bars.</b> The band runs from that period’s low to its high, the tick marks its close and the dot is the current price. The week comes from the W1 bar, or from D1 bars when W1 is not in the bundle.</p>
     <p><b>Levels &amp; room.</b> Range used is today’s high-to-low against the daily ATR of the last completed day. Typical-day reach projects one ATR from today’s low (up) and from today’s high (down). The Asian range runs from 00:00 Rome to the London open. The ladder lists the nearest levels above and below price; rows within 0.15 ATR are highlighted. Round numbers are spaced at roughly half an ATR. Latest shift is the most recent H1-or-higher bar where RSI crossed 50 or price crossed its moving average.</p>
     <p><b>COT positioning.</b> From the CFTC legacy futures-only report: EURUSD uses CME Euro FX, NDX100 the CME Nasdaq-100 E-mini, XAUUSD COMEX gold. Positions are as of Tuesday and published Friday 15:30 New York time (21:30 Rome). Large specs are non-commercial traders. The 3-year index places this week’s large-spec net between its lowest (0) and highest (100) reading of the last 156 weeks; at 10 or below, or 90 or above, positioning is crowded.</p>
-    <p>The lean is chart structure only. The news panel lists scheduled releases from MT5’s economic calendar; it does not read headlines or judge what the market expects, so run your pre-session check before acting.</p>
+    <p>The lean is chart structure only. The news panel is provided separately by Myfxbook, with forecasts, previous values and actual results when available. It does not contribute to the structure score. Dates and times follow the calendar's own controls; check the selected range and GMT offset before your session.</p>
   </footer>
 </div>
 
@@ -289,9 +298,9 @@ const $ = id => document.getElementById(id);
 const store = { summary: new Map(), series: new Map(), lastRead: null, news: [], hasNews: false, serverOffMin: NaN };
 const CLOUD_URL = 'https://rzxlwvuvakndsjbgveup.supabase.co/storage/v1/object/public/session-desk/session_desk_bundle.csv';
 const CLOUD_EVERY_S = 60;
-const cfg = { offsetH: 1, newsWeek: false };
+const cfg = { offsetH: 1 };
 try { Object.assign(cfg, JSON.parse(localStorage.getItem('mt5desk.cfg') || '{}')); } catch (e) {}
-delete cfg.cloud; delete cfg.sym; delete cfg.tf; delete cfg.refreshS;
+delete cfg.cloud; delete cfg.sym; delete cfg.tf; delete cfg.refreshS; delete cfg.newsWeek;
 const saveCfg = () => { try { localStorage.setItem('mt5desk.cfg', JSON.stringify(cfg)); } catch (e) {} };
 
 let model = [];          // built instrument views
@@ -562,48 +571,18 @@ function renderSessions() {
 
 /* ---------- news ---------- */
 const DAY = 864e5;
-function newsView() {      // today onward, Rome wall-clock, sorted
-  const off = cfg.offsetH * 3600e3, nowRome = wallOf(new Date(), ROME), day0 = Math.floor(nowRome / DAY) * DAY;
-  return store.news.map(n => { const w = n.allDay ? n.t : n.t + off; return Object.assign({}, n, { w, diff: w - nowRome }); })
-    .filter(n => n.w >= day0 && n.w < day0 + 8 * DAY).sort((a, b) => a.w - b.w);
-}
 function dayLabel(w) { const d = new Date(w); return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getUTCDay()] + ' ' + pad2(d.getUTCDate()) + '/' + pad2(d.getUTCMonth() + 1); }
-function renderNews() {
-  const body = $('newsBody'), sub = $('newsSub'), btn = $('btnNewsSpan');
-  if (!store.hasNews) {
-    sub.textContent = ''; btn.hidden = true;
-    body.innerHTML = cloudOn
-      ? '<p class="news-empty">The bundle has no news calendar. SessionDeskService 1.20 or later adds it from MT5\u2019s economic calendar.</p>'
-      : '<p class="news-empty">Waiting for data.</p>';
-    return;
-  }
-  const all = newsView(), day0 = Math.floor(wallOf(new Date(), ROME) / DAY) * DAY;
-  const list = cfg.newsWeek ? all : all.filter(n => n.w < day0 + 2 * DAY);
-  const next = all.find(n => !n.allDay && n.diff > 0);
-  sub.textContent = next ? `Next: ${fmtWall(next.w, next.w >= day0 + DAY)} Rome, ${next.cur} ${next.name}, ${until(next.diff)}` : 'Nothing more scheduled in the next 7 days';
-  btn.hidden = all.length === all.filter(n => n.w < day0 + 2 * DAY).length && !cfg.newsWeek;
-  btn.textContent = cfg.newsWeek ? 'Show 2 days' : 'Show 7 days';
-  if (!list.length) { body.innerHTML = `<p class="news-empty">No high-impact releases for your symbols ${cfg.newsWeek ? 'in the next 7 days' : 'today or tomorrow'}.</p>`; return; }
-  let html = '<div class="news-wrap"><table class="newst"><thead><tr><th scope="col">Rome</th><th scope="col">Cur</th><th scope="col">Event</th><th scope="col" class="sm-hide">Affects</th><th scope="col" class="n">Forecast</th><th scope="col" class="n sm-hide">Previous</th><th scope="col" class="n">Actual</th><th scope="col" class="sm-hide">Status</th></tr></thead><tbody>', last = null;
-  for (const n of list) {
-    const d = Math.floor(n.w / DAY) * DAY;
-    if (d !== last) { last = d; html += `<tr class="day"><th colspan="8" scope="colgroup">${d === day0 ? 'Today, ' : d === day0 + DAY ? 'Tomorrow, ' : ''}${dayLabel(n.w)}</th></tr>`; }
-    let st, past = false;
-    if (n.allDay) st = 'All day';
-    else if (n.diff > 3600e3) st = until(n.diff);
-    else if (n.diff > 0) st = `<span class="chip warn">\u26a0 ${until(n.diff)}</span>`;
-    else if (n.diff >= -1800e3) st = `<span class="chip warn">\u26a0 ${ago(-n.diff)}</span>`;
-    else { st = 'released'; past = true; }
-    html += `<tr class="${past ? 'past' : ''}"><td class="n" style="text-align:left">${n.allDay ? '\u2013' : hhmm(n.w)}</td><td>${esc(n.cur)}</td><td class="ev">${n.imp === 'medium' ? '<span class="tag med">MED</span>' : ''}${esc(n.name)}<div class="st-sm">${st}</div></td><td class="sm-hide">${n.syms.map(esc).join(' \u00b7 ')}</td><td class="n">${esc(n.forecast || '\u2013')}</td><td class="n sm-hide">${esc(n.prev || '\u2013')}</td><td class="n">${esc(n.actual || '\u2013')}</td><td class="sm-hide">${st}</td></tr>`;
-  }
-  body.innerHTML = html + '</tbody></table></div>';
+function calendarGuide(now = new Date()) {
+  const romeWall = wallOf(now, ROME), day0 = Math.floor(romeWall / DAY) * DAY;
+  const label = t => new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(t));
+  const offset = Math.round((romeWall - now.getTime()) / 3600000);
+  return `Yesterday–tomorrow: ${label(day0 - DAY)} – ${label(day0 + DAY)}. Select this range in the calendar's date picker. Rome is currently GMT${offset >= 0 ? '+' : ''}${offset}; select that offset in its clock menu.`;
 }
-function newsLine(m, list, day0) {
-  if (!store.hasNews) return '';
-  const mine = list.filter(n => !n.allDay && n.keys.includes(m.key));
-  const win = mine.find(n => n.diff <= 1800e3 && n.diff >= -1800e3);
-  if (win) return `<div class="newsline warn">\u26a0 News window: ${esc(win.cur)} ${esc(win.name)}, ${win.diff > 0 ? until(win.diff) : ago(-win.diff)}</div>`;
-  return '';
+function renderNews() {
+  // Update the guide only. Recreating the cross-origin iframe would reset the
+  // user's date/time settings on every Supabase refresh and 30-second repaint.
+  const guide = calendarGuide();
+  if ($('calendarGuide').textContent !== guide) $('calendarGuide').textContent = guide;
 }
 
 /* ---------- render: cards ---------- */
@@ -656,7 +635,7 @@ function renderCards() {
     el.innerHTML = `<div class="empty">${cloudOn ? 'The Supabase bundle has no instruments in it.' : esc(cloudErr || 'Loading live data from Supabase…')}</div>`;
     return;
   }
-  const off = cfg.offsetH * 3600e3, nlist = newsView(), nday0 = Math.floor(wallOf(new Date(), ROME) / DAY) * DAY;
+  const off = cfg.offsetH * 3600e3;
   el.innerHTML = model.map(m => {
     const chg = m.pd && Number.isFinite(m.pd.c) && Number.isFinite(m.price) ? 100 * (m.price - m.pd.c) / m.pd.c : NaN;
     const chgH = Number.isFinite(chg) ? `<span class="chg ${chg >= 0 ? 'c-up' : 'c-down'}">${chg >= 0 ? '▲ +' : '▼ −'}${Math.abs(chg).toFixed(2)}% vs prev close</span>` : '';
@@ -666,7 +645,6 @@ function renderCards() {
       <div class="inst-head"><h2>${esc(m.label)}</h2>${leanChip(m.lean)}</div>
       <div class="px"><span class="price">${fmt(m.price, m.dec)}</span>${chgH}</div>
       ${fresh}
-      ${newsLine(m, nlist, nday0)}
       ${shiftLine(m)}
       ${rangesHTML(m)}
       <div class="tfm-wrap"><table class="tfm">
@@ -876,7 +854,6 @@ async function readCloud() {
 /* ---------- wiring ---------- */
 $('offsetSel').value = String(cfg.offsetH);
 $('offsetSel').addEventListener('change', e => { cfg.offsetH = +e.target.value; refreshAll(); });
-$('btnNewsSpan').addEventListener('click', () => { cfg.newsWeek = !cfg.newsWeek; saveCfg(); renderNews(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) readCloud(); });
 
 /* ---------- COT (CFTC legacy futures-only, public API) ---------- */
@@ -967,3 +944,4 @@ setInterval(() => { renderSessions(); buildModel(); renderNews(); renderCards();
 </script>
 
 </body></html>
+
