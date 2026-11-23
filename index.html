@@ -213,6 +213,88 @@ button, select { font: inherit; color: inherit; }
   .newst td.ev { min-width: 120px; }
   .newst th, .newst td { padding-right: 8px; }
 }
+
+/* SESSION DESK MOBILE SYMBOL WORKSPACE V2 */
+.markets { display:flex; flex-direction:column; gap:10px; min-width:0; }
+.markets-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:8px; }
+.markets-head h2 { font:600 18px/1.15 var(--f-head); }
+.markets-count { color:var(--ink3); font:12px var(--f-data); }
+.markets-hint { color:var(--ink2); font-size:12.5px; }
+.market-nav { display:flex; flex-wrap:nowrap; gap:7px; overflow-x:auto; min-width:0;
+  padding:8px 2px; position:sticky; top:max(0px,env(safe-area-inset-top,0px)); z-index:15;
+  margin:0 -2px; background:var(--bg); scrollbar-width:thin; overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch; }
+.market-jump { display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
+  min-height:43px; padding:9px 13px; border-radius:999px; border:1px solid var(--line);
+  background:var(--panel); color:var(--ink2); text-decoration:none;
+  cursor:pointer; font:600 12px var(--f-data); }
+.market-jump.selected { background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
+.market-jump.calendar { font-family:var(--f-text); font-weight:500; }
+.cards.nested { display:flex; flex-direction:column; gap:10px; }
+.market-fold { display:block; min-width:0; border:1px solid var(--line); border-radius:9px;
+  background:var(--panel); scroll-margin-top:74px; }
+.market-fold[open] { border-color:var(--accent); }
+.market-summary { display:flex; justify-content:space-between; align-items:center; gap:8px 12px;
+  padding:13px 14px; min-height:82px; cursor:pointer; list-style:none; border-radius:9px; }
+.market-summary::-webkit-details-marker { display:none; }
+.market-summary::marker { content:''; }
+.market-summary:hover { background:var(--sunk); }
+.market-fold[open] > .market-summary { border-bottom:1px solid var(--line); border-radius:9px 9px 0 0; }
+.market-summary-main { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.market-summary-title { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+.market-summary-title b { font:600 19px/1.1 var(--f-head); }
+.market-summary-title .chip { font-size:11px; padding:3px 8px; }
+.market-summary-meta { color:var(--ink3); font-size:11.5px; }
+.market-summary-price { min-width:0; text-align:right; display:flex; flex-direction:column; gap:4px; }
+.market-summary-price strong { font:600 19px/1.1 var(--f-data); font-variant-numeric:tabular-nums; }
+.market-summary-price .chg { font:500 11px var(--f-data); }
+.market-arrow { width:9px; height:9px; flex:none; border-right:2px solid var(--ink3);
+  border-bottom:2px solid var(--ink3); margin-left:5px; margin-right:4px;
+  transform:rotate(45deg); transition:transform .15s; }
+.market-fold[open] .market-arrow { transform:rotate(225deg); }
+.market-summary-right { display:flex; align-items:center; gap:9px; }
+.market-fold-body { display:flex; flex-direction:column; min-width:0; padding:0 14px 16px; }
+.market-tabs { position:sticky; top:calc(max(0px,env(safe-area-inset-top,0px)) + 57px);
+  z-index:13; display:flex; gap:5px; padding:9px 0; overflow-x:auto;
+  background:var(--panel); border-bottom:1px solid var(--line); -webkit-overflow-scrolling:touch; }
+.market-tab { flex:0 0 auto; min-height:43px; padding:8px 12px;
+  border:1px solid transparent; border-radius:7px; background:transparent;
+  color:var(--ink2); font:600 12px var(--f-text); cursor:pointer; }
+.market-tab.active { background:var(--accent-soft); color:var(--accent); }
+.market-tab-panel { min-width:0; padding-top:12px; }
+.market-tab-panel[hidden] { display:none!important; }
+.market-tab-panel .inst { padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; }
+.market-tab-panel .lv { padding:0; border:0; min-width:0; gap:11px; }
+.market-panel-title { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline;
+  gap:6px 12px; margin-bottom:12px; }
+.market-panel-title h3 { font:600 16px/1.2 var(--f-head); }
+.market-panel-title span { color:var(--ink2); font-size:12px; }
+.market-tab-panel .tfm-wrap, .market-tab-panel .market-table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.market-tab-panel .tfm { min-width:335px; }
+.market-tab-panel .ladder { min-width:320px; }
+.market-tab-panel .newst { min-width:750px; }
+.market-source-hidden { display:none!important; }
+#calendar { scroll-margin-top:70px; }
+@media(max-width:520px) {
+  .wrap { padding-top:12px; gap:12px; }
+  .sessions { flex-wrap:nowrap; gap:14px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .sessions li { flex:none; }
+  .market-summary { padding:12px; }
+  .market-fold-body { padding:0 11px 13px; }
+  .market-summary-title b { font-size:18px; }
+  .market-summary-price strong { font-size:18px; }
+  .market-summary-price .chg { max-width:115px; }
+  .rsi-bar { display:block; }
+  .sm-hide { display:table-cell; }
+  .news-wrap { -webkit-overflow-scrolling:touch; }
+  #calendar .newst { min-width:750px; }
+}
+@media(min-width:768px) {
+  .market-summary { padding:16px 20px; }
+  .market-fold-body { padding:0 20px 20px; }
+  .market-summary-price strong { font-size:22px; }
+}
+
 </style>
 
 <div class="wrap">
@@ -238,9 +320,14 @@ button, select { font: inherit; color: inherit; }
     <div class="status" id="status" role="status">Loading live data from Supabase…</div>
   </section>
 
-  <section class="cards" id="cards" aria-label="Instruments"></section>
+  <section class="markets" aria-label="Instruments">
+    <div class="markets-head"><h2>Markets</h2><span class="markets-count" id="marketCount"></span></div>
+    <p class="markets-hint">Select a symbol for all its details. Swipe the symbol strip to switch markets.</p>
+    <nav class="market-nav" id="marketNav" aria-label="Switch instrument"></nav>
+    <div class="cards" id="cards" aria-label="Instruments"></div>
+  </section>
 
-  <section class="news" aria-label="High-impact news">
+  <section class="news" id="calendar" aria-label="High-impact news">
     <div class="news-head">
       <h2>High-impact news</h2>
       <span class="news-sub" id="newsSub"></span>
@@ -289,9 +376,11 @@ const $ = id => document.getElementById(id);
 const store = { summary: new Map(), series: new Map(), lastRead: null, news: [], hasNews: false, serverOffMin: NaN };
 const CLOUD_URL = 'https://rzxlwvuvakndsjbgveup.supabase.co/storage/v1/object/public/session-desk/session_desk_bundle.csv';
 const CLOUD_EVERY_S = 60;
-const cfg = { offsetH: 1, newsWeek: false };
+const cfg = { offsetH: 1, newsWeek: false, openSymbol: '', symbolTabs: {} };
 try { Object.assign(cfg, JSON.parse(localStorage.getItem('mt5desk.cfg') || '{}')); } catch (e) {}
 delete cfg.cloud; delete cfg.sym; delete cfg.tf; delete cfg.refreshS;
+if (typeof cfg.openSymbol !== 'string') cfg.openSymbol = '';
+if (!cfg.symbolTabs || typeof cfg.symbolTabs !== 'object' || Array.isArray(cfg.symbolTabs)) cfg.symbolTabs = {};
 const saveCfg = () => { try { localStorage.setItem('mt5desk.cfg', JSON.stringify(cfg)); } catch (e) {} };
 
 let model = [];          // built instrument views
@@ -845,7 +934,7 @@ function renderStatus() {
   $('offsetSel').value = String(cfg.offsetH);
   $('offsetLbl').hidden = !cloudOn || Number.isFinite(store.serverOffMin);   // only needed when the export lacks the broker clock
 }
-function refreshAll() { buildModel(); renderNews(); renderCards(); renderLevels(); renderCot(); renderStatus(); saveCfg(); }
+function refreshAll() { buildModel(); renderNews(); renderCards(); renderLevels(); renderCot(); renderStatus(); nestSymbolPanels(); saveCfg(); }
 
 /* ---------- live data: the MT5 service uploads the bundle to Supabase Storage, this page reads it every minute ---------- */
 let cloudLast = '', cloudOn = false, cloudErr = '';
@@ -914,6 +1003,7 @@ async function readCot() {
     cot = by; cotErr = ''; cotAt = Date.now();
   } catch (e) { cotErr = 'Could not load COT data from the CFTC.'; }
   renderCot();
+  syncCotPanels();
 }
 const fmtK = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toLocaleString('en-US');
 const cotCls = v => v > 0 ? 'up' : v < 0 ? 'down' : '';
@@ -956,6 +1046,181 @@ function renderCot() {
   el.innerHTML = html || `<p class="lv-empty">${model.length ? 'No COT market mapped for these symbols.' : 'Waiting for data.'}</p>`;
 }
 
+
+/* SESSION DESK MOBILE SYMBOL WORKSPACE V2: wrap original renderers; preserve their data calculations. */
+function symbolEventsHTML(m) {
+  if (!store.hasNews) return '<p class="news-empty">No economic calendar in the current bundle.</p>';
+  const mine = newsView().filter(n => Array.isArray(n.keys) && n.keys.includes(m.key));
+  if (!mine.length) return '<p class="news-empty">No relevant scheduled events in the next 7 days.</p>';
+  const day0 = Math.floor(wallOf(new Date(), ROME) / DAY) * DAY;
+  let html = '<div class="news-wrap"><table class="newst"><thead><tr><th>Rome</th><th>Cur</th><th>Event</th><th>Affects</th><th class="n">Forecast</th><th class="n">Previous</th><th class="n">Actual</th><th>Status</th></tr></thead><tbody>';
+  let prevDay = NaN;
+  for (const n of mine) {
+    const day = Math.floor(n.w / DAY) * DAY;
+    if (day !== prevDay) {
+      prevDay = day;
+      html += '<tr class="day"><th colspan="8" scope="colgroup">' + (day === day0 ? 'Today, ' : day === day0 + DAY ? 'Tomorrow, ' : '') + dayLabel(n.w) + '</th></tr>';
+    }
+    let status, past = false;
+    if (n.allDay) status = 'All day';
+    else if (n.diff > 3600e3) status = until(n.diff);
+    else if (n.diff > 0) status = '<span class="chip warn">⚠ ' + until(n.diff) + '</span>';
+    else if (n.diff >= -1800e3) status = '<span class="chip warn">⚠ ' + ago(-n.diff) + '</span>';
+    else { status = 'released'; past = true; }
+    html += '<tr class="' + (past ? 'past' : '') + '"><td class="n" style="text-align:left">' + (n.allDay ? '–' : hhmm(n.w)) + '</td><td>' + esc(n.cur) + '</td><td class="ev">' + (n.imp === 'medium' ? '<span class="tag med">MED</span>' : '') + esc(n.name) + '</td><td>' + (n.syms || []).map(esc).join(' · ') + '</td><td class="n">' + esc(n.forecast || '–') + '</td><td class="n">' + esc(n.prev || '–') + '</td><td class="n">' + esc(n.actual || '–') + '</td><td>' + status + '</td></tr>';
+  }
+  return html + '</tbody></table></div>';
+}
+function openSymbolTab(fold, tab, persist) {
+  fold.querySelectorAll('.market-tab').forEach(btn => {
+    const yes = btn.dataset.tab === tab;
+    btn.classList.toggle('active', yes);
+    btn.setAttribute('aria-selected', String(yes));
+  });
+  fold.querySelectorAll('.market-tab-panel').forEach(panel => { panel.hidden = panel.dataset.panel !== tab; });
+  if (persist) { cfg.symbolTabs[fold.dataset.key] = tab; saveCfg(); }
+}
+function syncSymbolPills() {
+  const nav = $('marketNav');
+  if (!nav) return;
+  nav.querySelectorAll('[data-symbol]').forEach(btn => {
+    const yes = btn.dataset.symbol === cfg.openSymbol;
+    btn.classList.toggle('selected', yes);
+    btn.setAttribute('aria-current', yes ? 'true' : 'false');
+  });
+}
+function nestSymbolPanels() {
+  const cards = $('cards'), levels = $('levels'), cotHost = $('cot');
+  const articles = Array.from(cards.children).filter(n => n.classList && n.classList.contains('inst'));
+  if (!articles.length || !model.length) {
+    $('marketNav').innerHTML = '';
+    $('marketCount').textContent = '';
+    levels.closest('section.levels').classList.remove('market-source-hidden');
+    cotHost.closest('section.levels').classList.remove('market-source-hidden');
+    return;
+  }
+  const levelNodes = Array.from(levels.querySelectorAll(':scope > .lv'));
+  const cotNodes = Array.from(cotHost.querySelectorAll(':scope > .lv'));
+  const cotMarkets = model.filter(m => cotOf(m.key));
+  const cotByKey = new Map(cotMarkets.map((m,i) => [m.key, cotNodes[i] || null]));
+  const nav = $('marketNav');
+  const previousScrollLeft = nav.scrollLeft;
+  nav.innerHTML = model.map(m => '<button type="button" class="market-jump" data-symbol="' + esc(m.key) + '">' + esc(m.label) + '</button>').join('') + '<a class="market-jump calendar" href="#calendar">Calendar</a>';
+  nav.scrollLeft = previousScrollLeft;
+  $('marketCount').textContent = model.length + (model.length === 1 ? ' symbol' : ' symbols');
+  cards.classList.add('nested');
+  const makePanel = (name, label, hint) => {
+    const p = document.createElement('section');
+    p.className = 'market-tab-panel'; p.dataset.panel = name;
+    if (name !== 'overview') p.innerHTML = '<div class="market-panel-title"><h3>' + label + '</h3><span>' + hint + '</span></div>';
+    return p;
+  };
+  const foldFragment = document.createDocumentFragment();
+  model.forEach((m, i) => {
+    const article = articles[i];
+    if (!article) return;
+    const fold = document.createElement('details');
+    fold.className = 'market-fold'; fold.dataset.key = m.key;
+    fold.open = cfg.openSymbol === m.key;
+    const header = article.querySelector('.inst-head');
+    const lean = header && header.querySelector('.chip');
+    const price = article.querySelector('.px .price');
+    const chg = article.querySelector('.px .chg');
+    const freshness = article.querySelector('.fresh');
+    const warning = article.querySelector('.newsline.warn');
+    const summary = document.createElement('summary');
+    summary.className = 'market-summary';
+    summary.innerHTML = '<span class="market-summary-main"><span class="market-summary-title"><b>' + esc(m.label) + '</b>' + (lean ? lean.outerHTML : '') + '</span><span class="market-summary-meta">' + (warning ? '⚠ Event risk · ' : '') + (freshness ? esc(freshness.textContent.trim()) : '') + '</span></span>' +
+      '<span class="market-summary-right"><span class="market-summary-price"><strong>' + (price ? esc(price.textContent) : '–') + '</strong>' + (chg ? chg.outerHTML : '') + '</span><span class="market-arrow" aria-hidden="true"></span></span>';
+    fold.appendChild(summary);
+    const body = document.createElement('div'); body.className = 'market-fold-body';
+    const tabs = document.createElement('div'); tabs.className = 'market-tabs'; tabs.setAttribute('role', 'tablist');
+    tabs.setAttribute('aria-label', m.label + ' details');
+    const addTab = (id, label) => {
+      const b = document.createElement('button'); b.type = 'button';
+      b.className = 'market-tab'; b.dataset.tab = id; b.textContent = label;
+      b.setAttribute('role', 'tab'); tabs.appendChild(b);
+    };
+    addTab('overview', 'Overview'); addTab('levels', 'Levels & room');
+    if (cotOf(m.key)) addTab('cot', 'COT positioning');
+    addTab('events', 'Events');
+    body.appendChild(tabs);
+    const overview = makePanel('overview'); overview.appendChild(article); body.appendChild(overview);
+    const levelPanel = makePanel('levels', 'Levels & room', 'Distances in daily ATR · Rome time');
+    if (levelNodes[i]) levelPanel.appendChild(levelNodes[i]);
+    else levelPanel.innerHTML += '<p class="lv-empty">Waiting for levels.</p>';
+    body.appendChild(levelPanel);
+    if (cotOf(m.key)) {
+      const cotPanel = makePanel('cot', 'COT positioning', 'CFTC futures only · Weekly');
+      const cotNode = cotByKey.get(m.key);
+      if (cotNode) cotPanel.appendChild(cotNode);
+      else cotPanel.innerHTML += '<p class="lv-empty">Loading positioning data.</p>';
+      body.appendChild(cotPanel);
+    }
+    const events = makePanel('events', 'High-impact events · ' + esc(m.label), 'Next 7 days · Rome time');
+    const scroller = document.createElement('div'); scroller.className = 'market-table-scroll';
+    scroller.innerHTML = symbolEventsHTML(m); events.appendChild(scroller);
+    body.appendChild(events);
+    fold.appendChild(body);
+    const availableTabs = Array.from(tabs.querySelectorAll('[data-tab]')).map(n=>n.dataset.tab);
+    const chosen = availableTabs.includes(cfg.symbolTabs[m.key]) ? cfg.symbolTabs[m.key] : 'overview';
+    openSymbolTab(fold, chosen, false);
+    foldFragment.appendChild(fold);
+  });
+  cards.replaceChildren(foldFragment);
+  levels.closest('section.levels').classList.add('market-source-hidden');
+  cotHost.closest('section.levels').classList.add('market-source-hidden');
+  syncSymbolPills();
+}
+function syncCotPanels() {
+  const folds = $('cards').querySelectorAll('details.market-fold');
+  if (!folds.length) return;
+  const cotNodes = Array.from($('cot').querySelectorAll(':scope > .lv'));
+  let i = 0;
+  for (const m of model) {
+    if (!cotOf(m.key)) continue;
+    const fold = Array.from(folds).find(f => f.dataset.key === m.key);
+    if (!fold) { i++; continue; }
+    const panel = fold.querySelector('[data-panel="cot"]');
+    if (!panel) { i++; continue; }
+    const old = panel.querySelector('.lv, .lv-empty');
+    if (old) old.remove();
+    if (cotNodes[i]) panel.appendChild(cotNodes[i]);
+    else {
+      const empty = document.createElement('p'); empty.className = 'lv-empty';
+      empty.textContent = 'Loading positioning data.'; panel.appendChild(empty);
+    }
+    i++;
+  }
+}
+function attachMarketNavigation() {
+  $('marketNav').addEventListener('click', e => {
+    const btn = e.target.closest('[data-symbol]');
+    if (!btn) return;
+    const fold = Array.from($('cards').querySelectorAll('details.market-fold')).find(f => f.dataset.key === btn.dataset.symbol);
+    if (!fold) return;
+    $('cards').querySelectorAll('details.market-fold').forEach(f => { if (f !== fold) f.open = false; });
+    fold.open = true; cfg.openSymbol = fold.dataset.key; saveCfg(); syncSymbolPills();
+    fold.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+  $('cards').addEventListener('toggle', e => {
+    const fold = e.target;
+    if (!fold.matches || !fold.matches('details.market-fold') || !fold.isConnected) return;
+    if (fold.open) {
+      cfg.openSymbol = fold.dataset.key;
+      $('cards').querySelectorAll('details.market-fold').forEach(f => { if (f !== fold) f.open = false; });
+    } else if (cfg.openSymbol === fold.dataset.key) cfg.openSymbol = '';
+    saveCfg(); syncSymbolPills();
+  }, true);
+  $('cards').addEventListener('click', e => {
+    const btn = e.target.closest('.market-tab');
+    if (!btn) return;
+    const fold = btn.closest('details.market-fold');
+    if (fold) openSymbolTab(fold, btn.dataset.tab, true);
+  });
+}
+attachMarketNavigation();
+
 refreshAll();
 renderClock(); renderSessions();
 readCloud();
@@ -963,7 +1228,7 @@ readCot();
 setInterval(() => { if (Date.now() - cotAt > 3 * 3600e3) readCot(); }, 15 * 60e3);
 setInterval(readCloud, CLOUD_EVERY_S * 1000);
 setInterval(renderClock, 1000);
-setInterval(() => { renderSessions(); buildModel(); renderNews(); renderCards(); renderLevels(); renderCot(); }, 30000);
+setInterval(() => { renderSessions(); buildModel(); renderNews(); renderCards(); renderLevels(); renderCot(); nestSymbolPanels(); }, 30000);
 })();
 </script>
 
