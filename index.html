@@ -349,6 +349,29 @@ button, select { font: inherit; color: inherit; }
 
 
 
+
+/* Mobile & tablet cleanup V6 — no change to desktop terminal layout.
+   Preserve symbol navigation and the full Overview / Levels / COT data. */
+@media (max-width:1199px) {
+  .markets-head,
+  .markets-hint,
+  .market-panel-title > span,
+  .market-tab-panel .level-legend { display:none; }
+
+  /* Price-location colors: above = green, below = red.
+     Levels within 0.15 daily ATR stay amber, overriding direction. */
+  .market-tab-panel[data-panel="levels"] .ladder tr.level-above .level-price,
+  .market-tab-panel[data-panel="levels"] .ladder tr.level-above .level-distance { color:var(--up); }
+  .market-tab-panel[data-panel="levels"] .ladder tr.level-below .level-price,
+  .market-tab-panel[data-panel="levels"] .ladder tr.level-below .level-distance { color:var(--down); }
+  .market-tab-panel[data-panel="levels"] .ladder tr.near .level-price,
+  .market-tab-panel[data-panel="levels"] .ladder tr.near .level-distance { color:var(--warn); }
+
+  /* With the introductory text gone, keep the symbol strip compact. */
+  .markets { gap:4px; }
+  .market-nav { padding-top:4px; }
+}
+
 /* Desktop polish V5: cleaner headings; direction-coded level prices.
    Applies only to desktop. Mobile markup and styling remain exactly as before. */
 @media (min-width:1200px) {
