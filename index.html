@@ -295,6 +295,24 @@ button, select { font: inherit; color: inherit; }
   .market-summary-price strong { font-size:22px; }
 }
 
+/* SESSION DESK ALL-DETAILS MOBILE V3 */
+.market-fold-body { gap:0; }
+.market-tab-panel { display:flex; flex-direction:column; gap:12px; min-width:0; padding:16px 0 18px; }
+.market-tab-panel + .market-tab-panel { border-top:1px solid var(--line); }
+.market-panel-title { margin-bottom:3px; padding-left:11px; border-left:3px solid var(--accent); }
+.market-panel-title h3 { font-size:17px; }
+.market-tab-panel[data-panel="levels"] .market-panel-title { border-left-color:var(--warn); }
+.market-tab-panel[data-panel="cot"] .market-panel-title { border-left-color:var(--up); }
+.market-tab-panel .inst-head { display:none; } /* Name and lean already visible in expanded summary */
+.market-tab-panel .inst { gap:13px; }
+.market-tab-panel .lv { gap:12px; }
+@media(max-width:520px) {
+  .market-tab-panel { gap:10px; padding:14px 0 16px; }
+  .market-panel-title h3 { font-size:16px; }
+  .market-panel-title span { font-size:11.5px; }
+  .market-fold-body { padding-bottom:3px; }
+}
+
 </style>
 
 <div class="wrap">
@@ -320,13 +338,6 @@ button, select { font: inherit; color: inherit; }
     <div class="status" id="status" role="status">Loading live data from Supabase…</div>
   </section>
 
-  <section class="markets" aria-label="Instruments">
-    <div class="markets-head"><h2>Markets</h2><span class="markets-count" id="marketCount"></span></div>
-    <p class="markets-hint">Select a symbol for all its details. Swipe the symbol strip to switch markets.</p>
-    <nav class="market-nav" id="marketNav" aria-label="Switch instrument"></nav>
-    <div class="cards" id="cards" aria-label="Instruments"></div>
-  </section>
-
   <section class="news" id="calendar" aria-label="High-impact news">
     <div class="news-head">
       <h2>High-impact news</h2>
@@ -334,6 +345,13 @@ button, select { font: inherit; color: inherit; }
       <button class="btn" id="btnNewsSpan" hidden>Show 7 days</button>
     </div>
     <div id="newsBody"></div>
+  </section>
+
+  <section class="markets" aria-label="Instruments">
+    <div class="markets-head"><h2>Markets</h2><span class="markets-count" id="marketCount"></span></div>
+    <p class="markets-hint">Tap a symbol to reveal its full analysis. Swipe the symbol strip to switch markets.</p>
+    <nav class="market-nav" id="marketNav" aria-label="Switch instrument"></nav>
+    <div class="cards" id="cards" aria-label="Instruments"></div>
   </section>
 
   <section class="levels" aria-label="Levels and room">
@@ -376,11 +394,11 @@ const $ = id => document.getElementById(id);
 const store = { summary: new Map(), series: new Map(), lastRead: null, news: [], hasNews: false, serverOffMin: NaN };
 const CLOUD_URL = 'https://rzxlwvuvakndsjbgveup.supabase.co/storage/v1/object/public/session-desk/session_desk_bundle.csv';
 const CLOUD_EVERY_S = 60;
-const cfg = { offsetH: 1, newsWeek: false, openSymbol: '', symbolTabs: {} };
+const cfg = { offsetH: 1, newsWeek: false, openSymbol: '' };
 try { Object.assign(cfg, JSON.parse(localStorage.getItem('mt5desk.cfg') || '{}')); } catch (e) {}
 delete cfg.cloud; delete cfg.sym; delete cfg.tf; delete cfg.refreshS;
 if (typeof cfg.openSymbol !== 'string') cfg.openSymbol = '';
-if (!cfg.symbolTabs || typeof cfg.symbolTabs !== 'object' || Array.isArray(cfg.symbolTabs)) cfg.symbolTabs = {};
+delete cfg.symbolTabs;
 const saveCfg = () => { try { localStorage.setItem('mt5desk.cfg', JSON.stringify(cfg)); } catch (e) {} };
 
 let model = [];          // built instrument views
@@ -1048,38 +1066,6 @@ function renderCot() {
 
 
 /* SESSION DESK MOBILE SYMBOL WORKSPACE V2: wrap original renderers; preserve their data calculations. */
-function symbolEventsHTML(m) {
-  if (!store.hasNews) return '<p class="news-empty">No economic calendar in the current bundle.</p>';
-  const mine = newsView().filter(n => Array.isArray(n.keys) && n.keys.includes(m.key));
-  if (!mine.length) return '<p class="news-empty">No relevant scheduled events in the next 7 days.</p>';
-  const day0 = Math.floor(wallOf(new Date(), ROME) / DAY) * DAY;
-  let html = '<div class="news-wrap"><table class="newst"><thead><tr><th>Rome</th><th>Cur</th><th>Event</th><th>Affects</th><th class="n">Forecast</th><th class="n">Previous</th><th class="n">Actual</th><th>Status</th></tr></thead><tbody>';
-  let prevDay = NaN;
-  for (const n of mine) {
-    const day = Math.floor(n.w / DAY) * DAY;
-    if (day !== prevDay) {
-      prevDay = day;
-      html += '<tr class="day"><th colspan="8" scope="colgroup">' + (day === day0 ? 'Today, ' : day === day0 + DAY ? 'Tomorrow, ' : '') + dayLabel(n.w) + '</th></tr>';
-    }
-    let status, past = false;
-    if (n.allDay) status = 'All day';
-    else if (n.diff > 3600e3) status = until(n.diff);
-    else if (n.diff > 0) status = '<span class="chip warn">⚠ ' + until(n.diff) + '</span>';
-    else if (n.diff >= -1800e3) status = '<span class="chip warn">⚠ ' + ago(-n.diff) + '</span>';
-    else { status = 'released'; past = true; }
-    html += '<tr class="' + (past ? 'past' : '') + '"><td class="n" style="text-align:left">' + (n.allDay ? '–' : hhmm(n.w)) + '</td><td>' + esc(n.cur) + '</td><td class="ev">' + (n.imp === 'medium' ? '<span class="tag med">MED</span>' : '') + esc(n.name) + '</td><td>' + (n.syms || []).map(esc).join(' · ') + '</td><td class="n">' + esc(n.forecast || '–') + '</td><td class="n">' + esc(n.prev || '–') + '</td><td class="n">' + esc(n.actual || '–') + '</td><td>' + status + '</td></tr>';
-  }
-  return html + '</tbody></table></div>';
-}
-function openSymbolTab(fold, tab, persist) {
-  fold.querySelectorAll('.market-tab').forEach(btn => {
-    const yes = btn.dataset.tab === tab;
-    btn.classList.toggle('active', yes);
-    btn.setAttribute('aria-selected', String(yes));
-  });
-  fold.querySelectorAll('.market-tab-panel').forEach(panel => { panel.hidden = panel.dataset.panel !== tab; });
-  if (persist) { cfg.symbolTabs[fold.dataset.key] = tab; saveCfg(); }
-}
 function syncSymbolPills() {
   const nav = $('marketNav');
   if (!nav) return;
@@ -1105,14 +1091,14 @@ function nestSymbolPanels() {
   const cotByKey = new Map(cotMarkets.map((m,i) => [m.key, cotNodes[i] || null]));
   const nav = $('marketNav');
   const previousScrollLeft = nav.scrollLeft;
-  nav.innerHTML = model.map(m => '<button type="button" class="market-jump" data-symbol="' + esc(m.key) + '">' + esc(m.label) + '</button>').join('') + '<a class="market-jump calendar" href="#calendar">Calendar</a>';
+  nav.innerHTML = '<a class="market-jump calendar" href="#calendar">Events ↑</a>' + model.map(m => '<button type="button" class="market-jump" data-symbol="' + esc(m.key) + '">' + esc(m.label) + '</button>').join('');
   nav.scrollLeft = previousScrollLeft;
   $('marketCount').textContent = model.length + (model.length === 1 ? ' symbol' : ' symbols');
   cards.classList.add('nested');
   const makePanel = (name, label, hint) => {
     const p = document.createElement('section');
     p.className = 'market-tab-panel'; p.dataset.panel = name;
-    if (name !== 'overview') p.innerHTML = '<div class="market-panel-title"><h3>' + label + '</h3><span>' + hint + '</span></div>';
+    p.innerHTML = '<div class="market-panel-title"><h3>' + label + '</h3><span>' + hint + '</span></div>';
     return p;
   };
   const foldFragment = document.createDocumentFragment();
@@ -1134,18 +1120,7 @@ function nestSymbolPanels() {
       '<span class="market-summary-right"><span class="market-summary-price"><strong>' + (price ? esc(price.textContent) : '–') + '</strong>' + (chg ? chg.outerHTML : '') + '</span><span class="market-arrow" aria-hidden="true"></span></span>';
     fold.appendChild(summary);
     const body = document.createElement('div'); body.className = 'market-fold-body';
-    const tabs = document.createElement('div'); tabs.className = 'market-tabs'; tabs.setAttribute('role', 'tablist');
-    tabs.setAttribute('aria-label', m.label + ' details');
-    const addTab = (id, label) => {
-      const b = document.createElement('button'); b.type = 'button';
-      b.className = 'market-tab'; b.dataset.tab = id; b.textContent = label;
-      b.setAttribute('role', 'tab'); tabs.appendChild(b);
-    };
-    addTab('overview', 'Overview'); addTab('levels', 'Levels & room');
-    if (cotOf(m.key)) addTab('cot', 'COT positioning');
-    addTab('events', 'Events');
-    body.appendChild(tabs);
-    const overview = makePanel('overview'); overview.appendChild(article); body.appendChild(overview);
+    const overview = makePanel('overview', 'Overview & timeframes', 'Price, ranges, RSI, ATR and moving averages'); overview.appendChild(article); body.appendChild(overview);
     const levelPanel = makePanel('levels', 'Levels & room', 'Distances in daily ATR · Rome time');
     if (levelNodes[i]) levelPanel.appendChild(levelNodes[i]);
     else levelPanel.innerHTML += '<p class="lv-empty">Waiting for levels.</p>';
@@ -1157,14 +1132,7 @@ function nestSymbolPanels() {
       else cotPanel.innerHTML += '<p class="lv-empty">Loading positioning data.</p>';
       body.appendChild(cotPanel);
     }
-    const events = makePanel('events', 'High-impact events · ' + esc(m.label), 'Next 7 days · Rome time');
-    const scroller = document.createElement('div'); scroller.className = 'market-table-scroll';
-    scroller.innerHTML = symbolEventsHTML(m); events.appendChild(scroller);
-    body.appendChild(events);
     fold.appendChild(body);
-    const availableTabs = Array.from(tabs.querySelectorAll('[data-tab]')).map(n=>n.dataset.tab);
-    const chosen = availableTabs.includes(cfg.symbolTabs[m.key]) ? cfg.symbolTabs[m.key] : 'overview';
-    openSymbolTab(fold, chosen, false);
     foldFragment.appendChild(fold);
   });
   cards.replaceChildren(foldFragment);
@@ -1212,12 +1180,7 @@ function attachMarketNavigation() {
     } else if (cfg.openSymbol === fold.dataset.key) cfg.openSymbol = '';
     saveCfg(); syncSymbolPills();
   }, true);
-  $('cards').addEventListener('click', e => {
-    const btn = e.target.closest('.market-tab');
-    if (!btn) return;
-    const fold = btn.closest('details.market-fold');
-    if (fold) openSymbolTab(fold, btn.dataset.tab, true);
-  });
+
 }
 attachMarketNavigation();
 
