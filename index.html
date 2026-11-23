@@ -347,6 +347,107 @@ button, select { font: inherit; color: inherit; }
 .kpi-row .num.up { color:var(--up); }
 .kpi-row .num.down { color:var(--down); }
 
+
+/* SESSION DESK DESKTOP TERMINAL V4
+   Desktop rules only: the established phone interface remains unchanged. */
+.desktop-watchlist-title, .desktop-market-info { display:none; }
+@media (min-width:1200px) {
+  .wrap { max-width:2000px; gap:18px; padding:24px 26px 44px; }
+  .top h1 { font-size:30px; }
+  .news { padding:18px 22px; border-radius:11px; }
+  .markets {
+    display:grid; grid-template-columns:250px minmax(0,1fr);
+    gap:13px 18px; align-items:start;
+  }
+  .markets-head { grid-column:1/-1; }
+  .markets-head h2 { font-size:21px; }
+  .markets-hint { display:none; }
+  .market-nav {
+    position:sticky; top:16px; z-index:8;
+    grid-column:1; grid-row:2;
+    display:flex; flex-direction:column; gap:8px;
+    padding:14px; margin:0; max-height:calc(100vh - 32px);
+    overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain;
+    border:1px solid var(--line); border-radius:11px;
+    background:var(--panel); -webkit-overflow-scrolling:auto;
+  }
+  .desktop-watchlist-title {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:2px 3px 7px; gap:6px; font:600 12px var(--f-head);
+    text-transform:uppercase; letter-spacing:.06em; color:var(--ink2);
+  }
+  .desktop-watchlist-title small { font:500 11px var(--f-data); color:var(--ink3); }
+  .market-jump {
+    flex-direction:column; justify-content:center; align-items:stretch;
+    width:100%; min-height:92px; padding:11px 12px;
+    border-radius:8px; gap:7px; text-align:left;
+    transition:background .15s ease,border-color .15s ease;
+  }
+  .market-jump:hover { border-color:var(--accent); background:var(--sunk); }
+  .market-jump.selected { border-left:3px solid var(--accent); padding-left:10px; background:var(--accent-soft); }
+  .market-jump.calendar {
+    min-height:37px; font:500 12px var(--f-text);
+    align-items:center; text-align:center; background:var(--sunk);
+    margin-bottom:2px;
+  }
+  .jump-symbol { font:600 15px var(--f-head); color:var(--ink); }
+  .desktop-market-info { display:flex; flex-direction:column; gap:6px; }
+  .watch-price { font:600 16px/1 var(--f-data); color:var(--ink); font-variant-numeric:tabular-nums; }
+  .watch-price.movement-up { color:var(--up); }
+  .watch-price.movement-down { color:var(--down); }
+  .watch-meta { display:flex; gap:5px 7px; flex-wrap:wrap; align-items:center; }
+  .watch-meta .chip { padding:2px 7px; font-size:11px; }
+  .watch-age { font:500 10.5px var(--f-text); color:var(--ink3); }
+  .watch-age.is-stale { color:var(--warn); font-weight:700; }
+  .watch-risk { font:600 11px var(--f-text); color:var(--warn); }
+  .cards.nested { grid-column:2; grid-row:2; display:block; min-width:0; }
+  .cards.nested > .market-fold:not([open]) { display:none; }
+  .cards.nested > .market-fold { border-radius:12px; border-color:var(--line); }
+  .market-fold[open] > .market-summary { border-radius:12px 12px 0 0; }
+  .market-summary { cursor:default; padding:18px 20px; }
+  .market-summary:hover { background:transparent; }
+  .market-summary-title b { font-size:23px; }
+  .market-summary-price strong { font-size:24px; }
+  .market-arrow { display:none; }
+  .market-fold-body {
+    display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:16px; align-items:start; padding:18px 20px 20px;
+  }
+  .market-tab-panel {
+    min-width:0; min-height:100%;
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:9px; padding:16px; gap:14px;
+  }
+  .market-tab-panel + .market-tab-panel { border-top:1px solid var(--line); }
+  .market-tab-panel[data-panel="overview"] { grid-column:1; grid-row:1; }
+  .market-tab-panel[data-panel="levels"] { grid-column:2; grid-row:1; }
+  .market-tab-panel[data-panel="cot"] { grid-column:1/-1; grid-row:2; min-height:0; }
+  .market-panel-title h3 { font-size:18px; }
+  .market-tab-panel .inst { gap:14px; }
+  .market-tab-panel .lv { gap:13px; }
+  .market-tab-panel .tfm { font-size:12px; min-width:335px; }
+  .market-tab-panel .ladder { font-size:12px; min-width:325px; }
+  .market-tab-panel[data-panel="cot"] .lv {
+    display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:13px 24px;
+  }
+  .market-tab-panel[data-panel="cot"] .lv > h3,
+  .market-tab-panel[data-panel="cot"] .lv > .ladder,
+  .market-tab-panel[data-panel="cot"] .lv > .cot-src,
+  .market-tab-panel[data-panel="cot"] .lv > .lv-empty { grid-column:1/-1; }
+  .market-tab-panel[data-panel="cot"] .lv > .kpi { min-width:0; }
+  .market-tab-panel .lv h3 { flex-wrap:wrap; }
+  .foot { max-width:130ch; }
+}
+@media (min-width:1700px) {
+  .wrap { max-width:2150px; padding-inline:32px; }
+  .markets { grid-template-columns:285px minmax(0,1fr); gap:15px 22px; }
+  .market-fold-body { gap:20px; padding:20px 24px 24px; }
+  .market-tab-panel { padding:20px; }
+  .market-tab-panel[data-panel="overview"] .ranges {
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px;
+  }
+}
+
 </style>
 
 <div class="wrap">
@@ -381,7 +482,7 @@ button, select { font: inherit; color: inherit; }
     <div id="newsBody"></div>
   </section>
 
-  <section class="markets" aria-label="Instruments">
+  <section class="markets" id="markets" aria-label="Instruments">
     <div class="markets-head"><h2>Markets</h2><span class="markets-count" id="marketCount"></span></div>
     <p class="markets-hint">Tap a symbol to reveal its full analysis. Swipe the symbol strip to switch markets.</p>
     <nav class="market-nav" id="marketNav" aria-label="Switch instrument"></nav>
@@ -1109,6 +1210,8 @@ function syncSymbolPills() {
     btn.setAttribute('aria-current', yes ? 'true' : 'false');
   });
 }
+// Desktop-only expanded terminal view; mobile behavior is unchanged.
+const isDesktopTerminal = () => window.matchMedia('(min-width: 1200px)').matches;
 function nestSymbolPanels() {
   const cards = $('cards'), levels = $('levels'), cotHost = $('cot');
   const articles = Array.from(cards.children).filter(n => n.classList && n.classList.contains('inst'));
@@ -1119,13 +1222,30 @@ function nestSymbolPanels() {
     cotHost.closest('section.levels').classList.remove('market-source-hidden');
     return;
   }
+  if (isDesktopTerminal() && !model.some(m => m.key === cfg.openSymbol)) cfg.openSymbol = model[0].key;
   const levelNodes = Array.from(levels.querySelectorAll(':scope > .lv'));
   const cotNodes = Array.from(cotHost.querySelectorAll(':scope > .lv'));
   const cotMarkets = model.filter(m => cotOf(m.key));
   const cotByKey = new Map(cotMarkets.map((m,i) => [m.key, cotNodes[i] || null]));
   const nav = $('marketNav');
   const previousScrollLeft = nav.scrollLeft;
-  nav.innerHTML = '<a class="market-jump calendar" href="#calendar">Events ↑</a>' + model.map(m => '<button type="button" class="market-jump" data-symbol="' + esc(m.key) + '">' + esc(m.label) + '</button>').join('');
+  const upcomingNews = newsView();
+  nav.innerHTML = '<div class="desktop-watchlist-title" aria-hidden="true">Watchlist <small>' + model.length + ' markets</small></div>' +
+    '<a class="market-jump calendar" href="#calendar">Events ↑</a>' +
+    model.map(m => {
+      const change = m.pd && Number.isFinite(m.pd.c) && Number.isFinite(m.price) ? m.price - m.pd.c : NaN;
+      const priceClass = Number.isFinite(change) ? (change > 0 ? 'movement-up' : change < 0 ? 'movement-down' : '') : '';
+      const risky = upcomingNews.some(n => !n.allDay && n.keys.includes(m.key) && Math.abs(n.diff) <= 1800e3);
+      const ageText = Number.isFinite(m.age) ? ago(Math.max(0,m.age)) : 'No latest bar';
+      return '<button type="button" class="market-jump" data-symbol="' + esc(m.key) + '" aria-label="View ' + esc(m.label) + '">' +
+        '<span class="jump-symbol">' + esc(m.label) + '</span>' +
+        '<span class="desktop-market-info" aria-hidden="true">' +
+          '<span class="watch-price ' + priceClass + '">' + fmt(m.price,m.dec) + '</span>' +
+          '<span class="watch-meta">' + leanChip(m.lean) +
+            '<span class="watch-age' + (m.stale ? ' is-stale' : '') + '">' + (m.stale ? '⚠ Old data · ' : '') + esc(ageText) + '</span></span>' +
+          (risky ? '<span class="watch-risk">⚠ High-impact event window</span>' : '') +
+        '</span></button>';
+    }).join('');
   nav.scrollLeft = previousScrollLeft;
   $('marketCount').textContent = model.length + (model.length === 1 ? ' symbol' : ' symbols');
   cards.classList.add('nested');
@@ -1205,6 +1325,9 @@ function attachMarketNavigation() {
     fold.open = true; cfg.openSymbol = fold.dataset.key; saveCfg(); syncSymbolPills();
     fold.scrollIntoView({ behavior:'smooth', block:'start' });
   });
+  $('cards').addEventListener('click', e => {
+    if (isDesktopTerminal() && e.target.closest('summary.market-summary')) e.preventDefault();
+  }, true);
   $('cards').addEventListener('toggle', e => {
     const fold = e.target;
     if (!fold.matches || !fold.matches('details.market-fold') || !fold.isConnected) return;
@@ -1217,6 +1340,7 @@ function attachMarketNavigation() {
 
 }
 attachMarketNavigation();
+window.matchMedia('(min-width: 1200px)').addEventListener('change', () => refreshAll());
 
 refreshAll();
 renderClock(); renderSessions();
