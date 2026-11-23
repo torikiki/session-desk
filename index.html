@@ -269,7 +269,7 @@ button, select { font: inherit; color: inherit; }
     <p><b>How the lean is scored.</b> Each timeframe votes on three things: price above or below its moving average, RSI above 55 or below 45, and the direction of the RSI slope (half weight). D1 counts 3×, H4 2×, H1 1.5×, M15 1×. A score of +30 or more reads as leaning up, −30 or less as leaning down, anything between as mixed.</p>
     <p><b>Previous day and week bars.</b> The band runs from that period’s low to its high, the tick marks its close and the dot is the current price. The week comes from the W1 bar, or from D1 bars when W1 is not in the bundle.</p>
     <p><b>Levels &amp; room.</b> Range used is today’s high-to-low against the daily ATR of the last completed day. Typical-day reach projects one ATR from today’s low (up) and from today’s high (down). The Asian range runs from 00:00 Rome to the London open. The ladder lists the nearest levels above and below price; rows within 0.15 ATR are highlighted. Round numbers are spaced at roughly half an ATR. Latest shift is the most recent H1-or-higher bar where RSI crossed 50 or price crossed its moving average.</p>
-    <p><b>COT positioning.</b> From the CFTC legacy futures-only report: EURUSD uses CME Euro FX, NDX100 the CME Nasdaq-100 E-mini, XAUUSD COMEX gold. Positions are as of Tuesday and published Friday 15:30 New York time (21:30 Rome). Large specs are non-commercial traders. The 3-year index places this week’s large-spec net between its lowest (0) and highest (100) reading of the last 156 weeks; at 10 or below, or 90 or above, positioning is crowded.</p>
+    <p><b>COT positioning.</b> From the CFTC legacy futures-only report: EURUSD uses CME Euro FX, NDX100 the CME Nasdaq-100 E-mini, XAUUSD COMEX gold, and USOUSD NYMEX WTI crude oil futures (a positioning proxy, not broker CFD positions). Positions are as of Tuesday and published Friday 15:30 New York time (21:30 Rome). Large specs are non-commercial traders. The 3-year index places this week’s large-spec net between its lowest (0) and highest (100) reading of the last 156 weeks; at 10 or below, or 90 or above, positioning is crowded.</p>
     <p>The lean is chart structure only. The news panel lists scheduled releases from MT5’s economic calendar; it does not read headlines or judge what the market expects, so run your pre-session check before acting.</p>
   </footer>
 </div>
@@ -885,6 +885,7 @@ const COT_MAP = [
   { re: /^EUR_?USD/, code: '099741', name: 'CME Euro FX' },
   { re: /^(NDX|NAS|US_?100|USTEC)/, code: '209742', name: 'CME Nasdaq-100 E-mini' },
   { re: /^(XAU|GOLD)/, code: '088691', name: 'COMEX gold' },
+  { re: /^(USO_?USD|USOIL|XTI_?USD|WTI)/, code: '067651', name: 'NYMEX WTI crude oil (futures positioning proxy)' },
 ];
 const COT_WEEKS = 156;
 let cot = null, cotErr = '', cotAt = 0;
