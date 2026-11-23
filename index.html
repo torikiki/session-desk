@@ -313,6 +313,40 @@ button, select { font: inherit; color: inherit; }
   .market-fold-body { padding-bottom:3px; }
 }
 
+/* SESSION DESK SEMANTIC NUMERIC COLORS V3 */
+.market-summary-price strong.movement-up { color:var(--up); }
+.market-summary-price strong.movement-down { color:var(--down); }
+.market-summary-price strong.movement-flat { color:var(--ink); }
+.rsi-number { font-weight:600; font-variant-numeric:tabular-nums; }
+.rsi-number.rsi-positive { color:var(--up); }
+.rsi-number.rsi-negative { color:var(--down); }
+.rsi-number.rsi-extreme { color:var(--warn); }
+.indicator-atr { color:var(--accent); font-weight:500; }
+.score .score-positive { color:var(--up); font-weight:700; }
+.score .score-negative { color:var(--down); font-weight:700; }
+.score .score-neutral { color:var(--ink2); font-weight:700; }
+.pdr-legend .range-low, .kpi-note .range-low { color:var(--up); font-weight:600; }
+.pdr-legend .range-high, .kpi-note .range-high { color:var(--down); font-weight:600; }
+.pdr-legend .range-close { color:var(--accent); font-weight:600; }
+.kpi-note .reach-up, .kpi-note .reach-up .num { color:var(--up); font-weight:600; }
+.kpi-note .reach-down, .kpi-note .reach-down .num { color:var(--down); font-weight:600; }
+.kpi-row b.range-used-warning { color:var(--warn); }
+.kpi-row b.range-used-normal { color:var(--accent); }
+.level-legend { display:flex; flex-wrap:wrap; gap:8px 14px; margin:1px 0 3px;
+  font:500 11.5px var(--f-text); color:var(--ink2); }
+.level-legend span { display:inline-flex; align-items:center; gap:6px; }
+.level-legend i { width:8px; height:8px; border-radius:2px; display:inline-block; }
+.level-legend .higher { background:var(--accent); }
+.level-legend .lower { background:var(--up); }
+.level-legend .nearby { background:var(--warn); }
+.ladder tr.level-above .level-price, .ladder tr.level-above .level-distance { color:var(--accent); font-weight:600; }
+.ladder tr.level-below .level-price, .ladder tr.level-below .level-distance { color:var(--up); font-weight:600; }
+.ladder tr.near .level-price, .ladder tr.near .level-distance { color:var(--warn); font-weight:700; }
+.ladder .cot-long { color:var(--up); font-weight:600; }
+.ladder .cot-short { color:var(--down); font-weight:600; }
+.kpi-row .num.up { color:var(--up); }
+.kpi-row .num.down { color:var(--down); }
+
 </style>
 
 <div class="wrap">
@@ -737,7 +771,7 @@ function rangeBarHTML(title, r, price, dec) {
       ${Number.isFinite(r.c) ? `<div class="pdr-close" style="left:${x(r.c)}%"></div>` : ''}
       <div class="pdr-now" style="left:${x(price)}%"></div>
     </div>
-    <div class="pdr-legend"><span>Low <b>${fmt(r.l, dec)}</b></span><span>Close <b>${fmt(r.c, dec)}</b></span><span>High <b>${fmt(r.h, dec)}</b></span></div>
+    <div class="pdr-legend"><span>Low <b class="range-low">${fmt(r.l, dec)}</b></span><span>Close <b class="range-close">${fmt(r.c, dec)}</b></span><span>High <b class="range-high">${fmt(r.h, dec)}</b></span></div>
   </div>`;
 }
 function rangesHTML(m) {
@@ -747,7 +781,7 @@ function rangesHTML(m) {
 function rowHTML(m, v) {
   const rsiTag = v.rsi >= 70 ? '<span class="tag ob">OB</span>' : v.rsi <= 30 ? '<span class="tag os">OS</span>' : '';
   const rsi = Number.isFinite(v.rsi)
-    ? `<span class="rsi-cell" title="${esc(v.zone || '')}">${rsiTag}${v.rsi.toFixed(1)}<span class="rsi-bar"><i style="left:${Math.max(0, Math.min(100, v.rsi)).toFixed(1)}%"></i></span></span>` : '–';
+    ? `<span class="rsi-cell" title="${esc(v.zone || '')}">${rsiTag}<strong class="rsi-number ${v.rsi >= 70 || v.rsi <= 30 ? 'rsi-extreme' : v.rsi >= 55 ? 'rsi-positive' : v.rsi <= 45 ? 'rsi-negative' : ''}">${v.rsi.toFixed(1)}</strong><span class="rsi-bar"><i style="left:${Math.max(0, Math.min(100, v.rsi)).toFixed(1)}%"></i></span></span>` : '–';
   const sl = !Number.isFinite(v.slope) ? '–' : Math.abs(v.slope) <= 0.05 ? '<span class="c-flat">– 0.0</span>'
     : v.slope > 0 ? `<span class="c-up">▲ ${v.slope.toFixed(1)}</span>` : `<span class="c-down">▼ ${Math.abs(v.slope).toFixed(1)}</span>`;
   let ma = '–';
@@ -755,7 +789,7 @@ function rowHTML(m, v) {
     const pct = 100 * (m.price - v.ma.value) / v.ma.value;
     ma = `<span class="${pct >= 0 ? 'c-up' : 'c-down'}">${pct >= 0 ? '▲ +' : '▼ −'}${Math.abs(pct).toFixed(2)}%</span><span class="ma-name">${esc(v.ma.name.replace('_', ' ').toUpperCase())}</span>`;
   }
-  return `<tr><td><span class="tfl">${esc(v.tf)}</span></td><td>${rsi}</td><td>${sl}</td><td>${fmt(v.atr, m.dec)}</td><td>${ma}</td></tr>`;
+  return `<tr><td><span class="tfl">${esc(v.tf)}</span></td><td>${rsi}</td><td>${sl}</td><td><span class="indicator-atr">${fmt(v.atr, m.dec)}</span></td><td>${ma}</td></tr>`;
 }
 function renderCards() {
   const el = $('cards');
@@ -780,7 +814,7 @@ function renderCards() {
         <thead><tr><th scope="col">TF</th><th scope="col">RSI 14</th><th scope="col">Slope</th><th scope="col">ATR 14</th><th scope="col">vs MA</th></tr></thead>
         <tbody>${m.views.map(v => rowHTML(m, v)).join('')}</tbody>
       </table></div>
-      <div class="score">${m.lean == null ? 'Not enough data to score.' : `Structure score <span class="num">${m.lean > 0 ? '+' : m.lean < 0 ? '−' : ''}${Math.abs(m.lean)}</span> on a −100 to +100 scale.`}</div>
+      <div class="score">${m.lean == null ? 'Not enough data to score.' : `Structure score <span class="num ${m.lean > 0 ? 'score-positive' : m.lean < 0 ? 'score-negative' : 'score-neutral'}">${m.lean > 0 ? '+' : m.lean < 0 ? '−' : ''}${Math.abs(m.lean)}</span> on a −100 to +100 scale.`}</div>
     </article>`;
   }).join('');
 }
@@ -867,11 +901,11 @@ function levelsHTML(m) {
     const rng = day.h - day.l, pct = 100 * rng / atr, scale = Math.max(100, pct * 1.05);
     const upTo = day.l + atr, dnTo = day.h - atr;
     html += `<div class="kpi">
-      <div class="kpi-row"><span class="lbl">Range used today</span><b>${Math.round(pct)}%</b></div>
+      <div class="kpi-row"><span class="lbl">Range used today</span><b class="${pct >= 85 ? 'range-used-warning' : 'range-used-normal'}">${Math.round(pct)}%</b></div>
       <div class="meter${pct >= 85 ? ' hot' : ''}" role="img" aria-label="${Math.round(pct)}% of daily ATR used"><i style="width:${(100 * pct / scale).toFixed(1)}%"></i><s style="left:${(100 * 100 / scale).toFixed(1)}%"></s></div>
       <div class="kpi-note">Day range <span class="num">${fmt(rng, d)}</span> of ATR <span class="num">${fmt(atr, d)}</span>. ${pct >= 100
         ? 'Already wider than a typical day.'
-        : `Typical-day reach: ▲ <span class="num">${fmt(upTo, d)}</span> (${sgn(upTo - price, d)}) · ▼ <span class="num">${fmt(dnTo, d)}</span> (${sgn(dnTo - price, d)})`}</div>
+        : `Typical-day reach: <span class="reach-up">▲ <span class="num">${fmt(upTo, d)}</span> (${sgn(upTo - price, d)})</span> · <span class="reach-down">▼ <span class="num">${fmt(dnTo, d)}</span> (${sgn(dnTo - price, d)})</span>`}</div>
     </div>`;
   } else html += `<p class="lv-empty">No bars for today yet, or no daily ATR.</p>`;
 
@@ -888,7 +922,7 @@ function levelsHTML(m) {
     if (!asia.forming && (asia.up || asia.dn)) note = where;
     html += `<div class="kpi">
       <div class="kpi-row"><span class="lbl">Asian range 00:00–${hhmm(asia.lonWall)}</span>${chip}</div>
-      <div class="kpi-note"><span class="num">${fmt(asia.l, d)} – ${fmt(asia.h, d)}</span>, size <span class="num">${fmt(size, d)}</span>${rel}. ${note}</div>
+      <div class="kpi-note"><span class="range-low num">${fmt(asia.l, d)}</span> – <span class="range-high num">${fmt(asia.h, d)}</span>, size <span class="num">${fmt(size, d)}</span>${rel}. ${note}</div>
     </div>`;
   }
 
@@ -896,9 +930,9 @@ function levelsHTML(m) {
   const { above, below } = ladderOf(m, r);
   const row = x => {
     const dist = x.v - price, ar = hasAtr ? Math.abs(dist) / atr : NaN, near = Number.isFinite(ar) && ar < 0.15;
-    return `<tr class="${near ? 'near' : ''}"><td>${esc(x.names.join(' · '))}</td><td>${fmt(x.v, d)}</td><td>${sgn(dist, d)}</td><td>${Number.isFinite(ar) ? ar.toFixed(2) : '–'}</td></tr>`;
+    return `<tr class="${dist > 0 ? 'level-above' : 'level-below'}${near ? ' near' : ''}"><td>${esc(x.names.join(' · '))}</td><td><span class="level-price">${fmt(x.v, d)}</span></td><td class="level-distance">${sgn(dist, d)}</td><td>${Number.isFinite(ar) ? ar.toFixed(2) : '–'}</td></tr>`;
   };
-  html += `<table class="ladder"><thead><tr><th scope="col">Level</th><th scope="col">Price</th><th scope="col">Distance</th><th scope="col">× ATR</th></tr></thead><tbody>
+  html += `<div class="level-legend" aria-label="Level colors"><span><i class="higher"></i>Above price</span><span><i class="lower"></i>Below price</span><span><i class="nearby"></i>Within 0.15 ATR</span></div><table class="ladder"><thead><tr><th scope="col">Level</th><th scope="col">Price</th><th scope="col">Distance</th><th scope="col">× ATR</th></tr></thead><tbody>
     ${above.map(row).join('')}
     <tr class="now"><td>Now</td><td>${fmt(price, d)}</td><td></td><td></td></tr>
     ${below.map(row).join('')}
@@ -1035,7 +1069,7 @@ function cotHTML(m) {
   const longPct = Math.round(100 * cur.spec[0] / (cur.spec[0] + cur.spec[1] || 1));
   const chip = sn > 0 ? '<span class="chip up">▲ Specs net long</span>' : sn < 0 ? '<span class="chip down">▼ Specs net short</span>' : '<span class="chip flat">Specs flat</span>';
   const row = (lbl, k) => { const c = net(cur[k]), d = c - net(prv[k]);
-    return `<tr><td>${lbl}</td><td>${cur[k][0].toLocaleString('en-US')}</td><td>${cur[k][1].toLocaleString('en-US')}</td><td class="num ${cotCls(c)}">${fmtK(c)}</td><td class="num ${cotCls(d)}">${fmtK(d)}</td></tr>`; };
+    return `<tr><td>${lbl}</td><td class="cot-long">${cur[k][0].toLocaleString('en-US')}</td><td class="cot-short">${cur[k][1].toLocaleString('en-US')}</td><td class="num ${cotCls(c)}">${fmtK(c)}</td><td class="num ${cotCls(d)}">${fmtK(d)}</td></tr>`; };
   const dd = new Date(cur.date + 'T00:00:00Z');
   // next release: the Friday after the latest report date, 15:30 New York (skip ahead a week if that has passed but data has not updated yet)
   let fri = dd.getTime() + 3 * DAY;
@@ -1117,7 +1151,7 @@ function nestSymbolPanels() {
     const summary = document.createElement('summary');
     summary.className = 'market-summary';
     summary.innerHTML = '<span class="market-summary-main"><span class="market-summary-title"><b>' + esc(m.label) + '</b>' + (lean ? lean.outerHTML : '') + '</span><span class="market-summary-meta">' + (warning ? '⚠ Event risk · ' : '') + (freshness ? esc(freshness.textContent.trim()) : '') + '</span></span>' +
-      '<span class="market-summary-right"><span class="market-summary-price"><strong>' + (price ? esc(price.textContent) : '–') + '</strong>' + (chg ? chg.outerHTML : '') + '</span><span class="market-arrow" aria-hidden="true"></span></span>';
+      '<span class="market-summary-right"><span class="market-summary-price"><strong class="' + (chg && chg.classList.contains('c-up') ? 'movement-up' : chg && chg.classList.contains('c-down') ? 'movement-down' : 'movement-flat') + '">' + (price ? esc(price.textContent) : '–') + '</strong>' + (chg ? chg.outerHTML : '') + '</span><span class="market-arrow" aria-hidden="true"></span></span>';
     fold.appendChild(summary);
     const body = document.createElement('div'); body.className = 'market-fold-body';
     const overview = makePanel('overview', 'Overview & timeframes', 'Price, ranges, RSI, ATR and moving averages'); overview.appendChild(article); body.appendChild(overview);
